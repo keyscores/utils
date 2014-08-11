@@ -10,7 +10,7 @@ filename_in="input.xlsx"
 filename_balance="Balance.csv"
 filename_accrual="Accrual.csv"
 
-df_sales = pd.read_excel(filename_in,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor']]
+df_sales = pd.read_excel(filename_in,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 df_sales = df_sales[df_sales['Royalty Price'] != 0]
 df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
 
@@ -134,7 +134,7 @@ df_comb['After tax']=df_comb['Net revenue']-df_comb['Tax']
 df_comb['Fee value']=df_comb['After tax']*df_comb[u'Comissão']
 df_comb['Royalty']=df_comb['After tax']-df_comb['Fee value']
 
-columns_accrual = ['month,year','Region','Rights Holder','Vendor Identifier','Product Type Identifier','Asset/Content Flavor','Net revenue','Royalty', 'Units', 'Tax', 'After tax', 'Fee value', 'Media', 'Encoding U$']
+columns_accrual = ['month,year','Region','Rights Holder','Vendor Identifier','Product Type Identifier','Asset/Content Flavor','Net revenue','Royalty', 'Units', 'Tax', 'After tax', 'Fee value', 'Media', 'Encoding U$', 'Provider']
 accrual_groupbycols = ['month,year','Vendor Identifier','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
 
 df_accrual_revenue   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Net revenue'].sum()
@@ -145,7 +145,8 @@ df_accrual_after_tax = df_comb[columns_accrual].groupby(accrual_groupbycols)['Af
 df_accrual_fee_value = df_comb[columns_accrual].groupby(accrual_groupbycols)['Fee value'].sum()
 df_accrual_media     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Media'].sum()
 df_accrual_encoding  = df_comb[columns_accrual].groupby(accrual_groupbycols)['Encoding U$'].sum()
-df_accrual = pd.DataFrame([df_accrual_revenue,df_accrual_royalty,df_accrual_units,df_accrual_tax,df_accrual_after_tax,df_accrual_fee_value,df_accrual_media,df_accrual_encoding]).transpose()
+df_accrual_provider  = df_comb[columns_accrual].groupby(accrual_groupbycols)['Provider'].sum()
+df_accrual = pd.DataFrame([df_accrual_revenue,df_accrual_royalty,df_accrual_units,df_accrual_tax,df_accrual_after_tax,df_accrual_fee_value,df_accrual_media,df_accrual_encoding,df_accrual_provider]).transpose()
 df_accrual.to_csv(filename_accrual, encoding='utf-8')
 del df_accrual
 
