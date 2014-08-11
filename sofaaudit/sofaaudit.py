@@ -134,12 +134,13 @@ df_comb['After tax']=df_comb['Net revenue']-df_comb['Tax']
 df_comb['Fee value']=df_comb['After tax']*df_comb[u'Comissão']
 df_comb['Royalty']=df_comb['After tax']-df_comb['Fee value']
 
-columns_accrual = ['month,year','Region','Rights Holder','Vendor Identifier','Product Type Identifier','Asset/Content Flavor','Net revenue','Royalty']
+columns_accrual = ['month,year','Region','Rights Holder','Vendor Identifier','Product Type Identifier','Asset/Content Flavor','Net revenue','Royalty', 'Units']
 accrual_groupbycols = ['month,year','Vendor Identifier','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
 
 df_accrual_revenue = df_comb[columns_accrual].groupby(accrual_groupbycols)['Net revenue'].sum()
 df_accrual_royalty = df_comb[columns_accrual].groupby(accrual_groupbycols)['Royalty'].sum()
-df_accrual = pd.DataFrame([df_accrual_revenue,df_accrual_royalty]).transpose()
+df_accrual_units = df_comb[columns_accrual].groupby(accrual_groupbycols)['Units'].sum()
+df_accrual = pd.DataFrame([df_accrual_revenue,df_accrual_royalty,df_accrual_units]).transpose()
 df_accrual.to_csv(filename_accrual, encoding='utf-8')
 del df_accrual
 
