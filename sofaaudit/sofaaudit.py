@@ -9,7 +9,7 @@ filename_in="input.xlsx"
 filename_balance="Balance.csv"
 filename_accrual="Accrual.csv"
 
-df_sales = pd.read_excel(filename_in,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier']]
+df_sales = pd.read_excel(filename_in,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor']]
 df_encd  = pd.read_excel(filename_in,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','Rights Holder']]
 df_regions = pd.read_excel(filename_in,sheetname="Region")
 df_currency = pd.read_excel(filename_in,sheetname="Currency")
@@ -70,7 +70,7 @@ n_regions = len(regions)
 for date in dates:
     for title in titles:    
         for region in regions:
-            new_row = {'Vendor Identifier':title,'Units':0,'Royalty Price':0,'Customer Currency':'USD','month,year':date,'Region':region,'Product Type Identifier':''}
+            new_row = {'Vendor Identifier':title,'Units':0,'Royalty Price':0,'Customer Currency':'USD','month,year':date,'Region':region,'Product Type Identifier':'','Asset/Content Flavor': ''}
             df_sales = df_sales.append([new_row])
             #df_sales.append({'Vendor Identifier':title,'month,year':date,'Region':region,'Units':0,'Customer Currency':'USD','Royalty Price':0},ignore_index=True)
 
@@ -130,8 +130,8 @@ df_comb['After tax']=df_comb['Net revenue']-df_comb['Tax']
 df_comb['Fee value']=df_comb['After tax']*df_comb[u'Comissão']
 df_comb['Royalty']=df_comb['After tax']-df_comb['Fee value']
 
-columns_accrual = ['month,year','Region','Rights Holder','Vendor Identifier','Product Type Identifier','Net revenue','Royalty']
-accrual_groupbycols = ['month,year','Vendor Identifier','Region','Rights Holder','Product Type Identifier']
+columns_accrual = ['month,year','Region','Rights Holder','Vendor Identifier','Product Type Identifier','Asset/Content Flavor','Net revenue','Royalty']
+accrual_groupbycols = ['month,year','Vendor Identifier','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
 
 df_accrual_revenue = df_comb[columns_accrual].groupby(accrual_groupbycols)['Net revenue'].sum()
 df_accrual_royalty = df_comb[columns_accrual].groupby(accrual_groupbycols)['Royalty'].sum()
