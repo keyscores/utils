@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import datetime
 import pandas as pd
 import numpy as np
 
@@ -11,6 +12,7 @@ filename_accrual="Accrual.csv"
 
 df_sales = pd.read_excel(filename_in,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor']]
 df_sales = df_sales[df_sales['Royalty Price'] != 0]
+df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
 
 df_encd  = pd.read_excel(filename_in,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','Rights Holder']]
 df_regions = pd.read_excel(filename_in,sheetname="Region")
