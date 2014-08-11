@@ -124,8 +124,8 @@ df_comb['Recoupable']=df_comb['Encoding U$']+df_comb['Media']
 # setting Recoupable to 0 before the start of the fiscal year (by month)
 df_comb['Recoupable'] = df_comb.apply(lambda x: fiscal_year(x,'Recoupable'),axis=1)
 del df_comb[u'Mês Início Fiscal']
-del df_comb['Media']
-del df_comb['Encoding U$']
+#del df_comb['Media']
+#del df_comb['Encoding U$']
 
 # output calculations
 df_comb['Net revenue']=df_comb['Royalty Price']*df_comb['Units']*df_comb['Exchange Rate']
@@ -134,13 +134,18 @@ df_comb['After tax']=df_comb['Net revenue']-df_comb['Tax']
 df_comb['Fee value']=df_comb['After tax']*df_comb[u'Comissão']
 df_comb['Royalty']=df_comb['After tax']-df_comb['Fee value']
 
-columns_accrual = ['month,year','Region','Rights Holder','Vendor Identifier','Product Type Identifier','Asset/Content Flavor','Net revenue','Royalty', 'Units']
+columns_accrual = ['month,year','Region','Rights Holder','Vendor Identifier','Product Type Identifier','Asset/Content Flavor','Net revenue','Royalty', 'Units', 'Tax', 'After tax', 'Fee value', 'Media', 'Encoding U$']
 accrual_groupbycols = ['month,year','Vendor Identifier','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
 
-df_accrual_revenue = df_comb[columns_accrual].groupby(accrual_groupbycols)['Net revenue'].sum()
-df_accrual_royalty = df_comb[columns_accrual].groupby(accrual_groupbycols)['Royalty'].sum()
-df_accrual_units = df_comb[columns_accrual].groupby(accrual_groupbycols)['Units'].sum()
-df_accrual = pd.DataFrame([df_accrual_revenue,df_accrual_royalty,df_accrual_units]).transpose()
+df_accrual_revenue   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Net revenue'].sum()
+df_accrual_royalty   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Royalty'].sum()
+df_accrual_units     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Units'].sum()
+df_accrual_tax       = df_comb[columns_accrual].groupby(accrual_groupbycols)['Tax'].sum()
+df_accrual_after_tax = df_comb[columns_accrual].groupby(accrual_groupbycols)['After tax'].sum()
+df_accrual_fee_value = df_comb[columns_accrual].groupby(accrual_groupbycols)['Fee value'].sum()
+df_accrual_media     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Media'].sum()
+df_accrual_encoding  = df_comb[columns_accrual].groupby(accrual_groupbycols)['Encoding U$'].sum()
+df_accrual = pd.DataFrame([df_accrual_revenue,df_accrual_royalty,df_accrual_units,df_accrual_tax,df_accrual_after_tax,df_accrual_fee_value,df_accrual_media,df_accrual_encoding]).transpose()
 df_accrual.to_csv(filename_accrual, encoding='utf-8')
 del df_accrual
 
