@@ -7,14 +7,20 @@ import numpy as np
 
 #filename="Sofa7Krecords-2.xlsx"
 filename_in="input.xlsx"
+filename_cable="Cable.xlsx"
 filename_balance="Balance.csv"
 filename_accrual="Accrual.csv"
 
 df_sales = pd.read_excel(filename_in,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+
+df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+
+df_sales = df_sales.append(df_cable)
+
 df_sales = df_sales[df_sales['Royalty Price'] != 0]
 df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
 
-df_encd  = pd.read_excel(filename_in,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','Rights Holder']]
+df_encd  = pd.read_excel(filename_in,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','NOW Tax','Rights Holder']]
 df_regions = pd.read_excel(filename_in,sheetname="Region")
 df_currency = pd.read_excel(filename_in,sheetname="Currency")
 
@@ -85,7 +91,7 @@ df_encd[u'Mês Início Fiscal'] = pd.to_datetime(df_encd[u'Mês Início Fiscal']
 for title in titles:    
     for region in regions:
         if df_encd[(df_encd['Vendor Identifier']==title) & (df_encd['Region']==region)].empty:
-            print "Warning:\n\t We are missing the encoding value for vendor_id: ",title,"in region: ",region,"Rights Holder: ",rightsholder
+            print "Warning:\n\t We are missing the encoding value for vendor_id: ",title,"in region: ",region,"Rights Holder: "
             new_encoding={'Vendor Identifier':title,'Region':region,u'Comissão':0.0,'Encoding U$':0.0,'Media':0.0,u'Mês Início Fiscal':min_date,'Tax Witholding':0.0,'Rights Holder':''}
             df_encd = df_encd.append([new_encoding])
 
@@ -130,8 +136,13 @@ del df_comb[u'Mês Início Fiscal']
 # output calculations
 df_comb['Net revenue']=df_comb['Royalty Price']*df_comb['Units']*df_comb['Exchange Rate']
 #df_comb['Tax']=df_comb['Net revenue']*df_comb['Tax Witholding']
+
 apple_provider = df_comb['Provider'] == 'APPLE'
+net_now_provider = df_comb['Provider'] == 'NET NOW'
+
 df_comb['Tax'] = df_comb['Net revenue'][apple_provider] * df_comb['Tax Witholding'][apple_provider]
+df_comb['Tax'] = df_comb['Net revenue'][net_now_provider] * df_comb['NOW Tax'][net_now_provider]
+
 df_comb['After tax']=df_comb['Net revenue']-df_comb['Tax']
 df_comb['Fee value']=df_comb['After tax']*df_comb[u'Comissão']
 df_comb['Royalty']=df_comb['After tax']-df_comb['Fee value']
