@@ -129,7 +129,9 @@ del df_comb[u'Mês Início Fiscal']
 
 # output calculations
 df_comb['Net revenue']=df_comb['Royalty Price']*df_comb['Units']*df_comb['Exchange Rate']
-df_comb['Tax']=df_comb['Net revenue']*df_comb['Tax Witholding']
+#df_comb['Tax']=df_comb['Net revenue']*df_comb['Tax Witholding']
+apple_provider = df_comb['Provider'] == 'APPLE'
+df_comb['Tax'] = df_comb['Net revenue'][apple_provider] * df_comb['Tax Witholding'][apple_provider]
 df_comb['After tax']=df_comb['Net revenue']-df_comb['Tax']
 df_comb['Fee value']=df_comb['After tax']*df_comb[u'Comissão']
 df_comb['Royalty']=df_comb['After tax']-df_comb['Fee value']
