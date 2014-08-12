@@ -9,8 +9,8 @@ import numpy as np
 filename_apple="Apple.xlsx"
 filename_cable="Cable.xlsx"
 filename_lookup="Lookup.xlsx"
-filename_balance="Balance.csv"
-filename_accrual="Accrual.csv"
+filename_balance="output/Balance.csv"
+filename_accrual="output/Accrual.csv"
 
 df_sales = pd.read_excel(filename_apple,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 
@@ -225,11 +225,11 @@ df_payment_owed = df_positive_balance.groupby(level=[1,2]).diff()
 df_payment_owed = df_payment_owed.fillna(value=0)
 print df_payment_owed
 
-'''
+
 #### EXPORTING BALANCE REPORT ####
 df_balance_report = pd.DataFrame([df_payment_owed,df_positive_balance]).transpose()
 df_balance_report.to_csv(filename_balance, encoding='utf-8')
-'''
+
 
 
 '''
