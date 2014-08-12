@@ -186,11 +186,11 @@ balance_groupby = ['month,year','Vendor Identifier','Rights Holder']
 df_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum()
 #df_royalty
 
-# ROYALTY BALANCE Get the cumulative sum of Royalty
+# CUMULATIVE ROYALTY Get the cumulative sum of Royalty
 df_cumu_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum().groupby(level=[1,2]).cumsum()
 #print df_cumu_royalty
 
-# RECOUPABLE BALANCE Get the cumulative sum of Recoupable
+# CUMULATIVE RECOUPABLE Get the cumulative sum of Recoupable
 
 '''
 BUG: The Values for encoding and recoupable are not correct. Somehow they are accumulating.
