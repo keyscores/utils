@@ -182,7 +182,7 @@ print df_comb['recoupable']
 
 
 '''
-#### IGNORE EXPORTING ACCRUAL REPORT ####
+#### EXPORTING ACCRUAL REPORT ####
 #df_accrual = pd.DataFrame([df_accrual_royalty,df_accrual_recoupable]).transpose()
 #df_accrual.to_csv(filename_accrual, encoding='utf-8')
 '''
@@ -205,12 +205,12 @@ TODO: Should be Recoupable. Using Encoding as a placeholder.
 df_cumu_recoupable = df_comb[columns_accrual].groupby(balance_groupby)['Encoding U$'].sum().groupby(level=[0,1,2]).cumsum()
 #print df_cumu_recoupable
 
-# BALANCE#
+#BALANCE#
 #Find the difference/balance of the cumulative royalty and cumulative recoupable
 df_balance = df_cumu_royalty + df_cumu_recoupable
 #print df_balance
 
-# POSITIVE BALANCE#
+#POSITIVE BALANCE#
 # select only where Balances are Positive,
 df_positive_balance = df_balance.mask(df_balance < 0)
 # then replace the NaN for 0.
@@ -223,13 +223,13 @@ df_positive_balance = df_positive_balance.fillna(value=0)
 df_payment_owed = df_positive_balance.groupby(level=[1,2]).diff()
 #fill the NaN with 0
 df_payment_owed = df_payment_owed.fillna(value=0)
-#print df_payment_owed
+print df_payment_owed
 
-
-#### PREPARE BALANCE REPORT ####
+'''
+#### EXPORTING BALANCE REPORT ####
 df_balance_report = pd.DataFrame([df_payment_owed,df_positive_balance]).transpose()
-print df_balance_report
 df_balance_report.to_csv(filename_balance, encoding='utf-8')
+'''
 
 
 '''
