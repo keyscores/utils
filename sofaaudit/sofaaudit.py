@@ -6,12 +6,13 @@ import pandas as pd
 import numpy as np
 
 #filename="Sofa7Krecords-2.xlsx"
-filename_in="input.xlsx"
+filename_apple="Apple.xlsx"
 filename_cable="Cable.xlsx"
+filename_lookup="Lookup.xlsx"
 filename_balance="Balance.csv"
 filename_accrual="Accrual.csv"
 
-df_sales = pd.read_excel(filename_in,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+df_sales = pd.read_excel(filename_apple,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 
 # NELSON: This line was added to append Cable.xslx another table similar to "input.Sales" 
 df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
@@ -22,9 +23,9 @@ df_sales = df_sales[df_sales['Royalty Price'] != 0]
 df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
 
 # NELSON: "input.Encoding.Now Tax" is another column being read. It's neceesary for accurate calculation of TAX further down.
-df_encd  = pd.read_excel(filename_in,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','NOW Tax','Rights Holder']]
-df_regions = pd.read_excel(filename_in,sheetname="Region")
-df_currency = pd.read_excel(filename_in,sheetname="Currency")
+df_encd  = pd.read_excel(filename_lookup,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','NOW Tax','Rights Holder']]
+df_regions = pd.read_excel(filename_lookup,sheetname="Region")
+df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
 
 # getting month,year tuples
 df_sales['date']=pd.to_datetime(df_sales['Download Date (PST)'])
@@ -166,9 +167,8 @@ df_comb['Tax'] = df_comb['Net revenue'][apple_provider] * df_comb['Tax Witholdin
 df_comb['Tax2'] = df_comb['Net revenue'][net_now_provider] * df_comb['NOW Tax'][net_now_provider]
 
 '''
-
-
 df_accrual_tax       = df_comb[columns_accrual].groupby(accrual_groupbycols)['Tax'].sum()
+
 df_accrual_after_tax = df_comb[columns_accrual].groupby(accrual_groupbycols)['After tax'].sum()
 df_accrual_fee_value = df_comb[columns_accrual].groupby(accrual_groupbycols)['Fee value'].sum()
 df_accrual_media     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Media'].sum()
