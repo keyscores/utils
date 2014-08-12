@@ -14,16 +14,14 @@ filename_accrual="output/Accrual.csv"
 
 df_sales = pd.read_excel(filename_apple,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 
-df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 
-####NOT APPENDING CABLE FOR NOW
-# append cable.xlsx
+####APPENDING CABLE - DISABLED
+#df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 #df_sales = df_sales.append(df_cable)
 
 df_sales = df_sales[df_sales['Royalty Price'] != 0]
 df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
 
-# NELSON: "input.Encoding.Now Tax" is another column being read. It's neceesary for accurate calculation of TAX further down.
 df_encd  = pd.read_excel(filename_lookup,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','NOW Tax','Rights Holder']]
 df_regions = pd.read_excel(filename_lookup,sheetname="Region")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
@@ -175,18 +173,11 @@ df_accrual_fee_value = df_comb[columns_accrual].groupby(accrual_groupbycols)['Fe
 df_accrual_media     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Media'].sum()
 df_accrual_encoding  = df_comb[columns_accrual].groupby(accrual_groupbycols)['Encoding U$'].sum()
 
-'''
-# TODO Create Recoupable
-df_comb['recoupable'] = df_accrual_encoding['Encoding U$'] + df_accrual_encoding['Media']
-print df_comb['recoupable']
-'''
 
-
-'''
 #### EXPORTING ACCRUAL REPORT ####
 #df_accrual = pd.DataFrame([df_accrual_royalty,df_accrual_recoupable]).transpose()
 #df_accrual.to_csv(filename_accrual, encoding='utf-8')
-'''
+
 
 ####  BALANCE CALCULATIONS ####
 balance_groupby = ['month,year','Vendor Identifier','Rights Holder']
@@ -200,10 +191,34 @@ df_cumu_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].s
 #print df_cumu_royalty
 
 # RECOUPABLE BALANCE Get the cumulative sum of Recoupable
+
 '''
-TODO: Should be Recoupable. Using Encoding as a placeholder.
+BUG: The Values for encoding and recoupable are not correct. Somehow they are accumulating.
+
+month,year  Vendor Identifier               Rights Holder
+(2014, 5)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes      -456
+                                            Mares Filmes     -200
+            0257_20131115_SOFA_ELPASEO      Cineplex        -1050
+(2014, 6)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes      -456
+                                            Mares Filmes     -200
+            0257_20131115_SOFA_ELPASEO      Cineplex        -1050
+(2014, 7)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes      -456
+                                            Mares Filmes     -200
+            0257_20131115_SOFA_ELPASEO      Cineplex         -540
+
+Should be:
+(2014, 5)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes      -228
+                                            Mares Filmes     -200
+            0257_20131115_SOFA_ELPASEO      Cineplex         -530
+(2014, 6)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes      -228
+                                            Mares Filmes     -200
+            0257_20131115_SOFA_ELPASEO      Cineplex         -530
+(2014, 7)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes      -228
+                                            Mares Filmes     -200
+            0257_20131115_SOFA_ELPASEO      Cineplex         -530
+            
 '''
-df_cumu_recoupable = df_comb[columns_accrual].groupby(['month,year','Vendor Identifier','Rights Holder'])['Encoding U$'].sum()
+df_cumu_recoupable = df_comb[columns_accrual].groupby(balance_groupby)['Encoding U$'].sum()
 print df_cumu_recoupable
 
 #BALANCE#
