@@ -14,11 +14,13 @@ filename_accrual="output/Accrual.csv"
 
 df_sales = pd.read_excel(filename_apple,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 
-
+'''
 ####APPENDING CABLE - DISABLED
 #df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 #df_sales = df_sales.append(df_cable)
-
+####A
+'''
+#Clean some values
 df_sales = df_sales[df_sales['Royalty Price'] != 0]
 df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
 
@@ -77,7 +79,8 @@ del df_regions
 # used regions domain
 regions = list(set(df_sales['Region'].values))
 n_regions = len(regions)
-
+'''
+### THIS IS UNECCESSARY It breaks cumulative cumulative sum of Recoupable
 # filing empty dates 
 for date in dates:
     for title in titles:    
@@ -85,7 +88,7 @@ for date in dates:
             new_row = {'Vendor Identifier':title,'Units':0,'Royalty Price':0,'Customer Currency':'USD','month,year':date,'Region':region,'Product Type Identifier':'','Asset/Content Flavor': ''}
             df_sales = df_sales.append([new_row])
             #df_sales.append({'Vendor Identifier':title,'month,year':date,'Region':region,'Units':0,'Customer Currency':'USD','Royalty Price':0},ignore_index=True)
-
+'''
 
 df_encd[u'Mês Início Fiscal'] = pd.to_datetime(df_encd[u'Mês Início Fiscal'])
 
@@ -191,55 +194,31 @@ df_cumu_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].s
 #print df_cumu_royalty
 
 # CUMULATIVE RECOUPABLE Get the cumulative sum of Recoupable
-
-'''
-BUG: The Values for encoding and recoupable are not correct. Somehow they are accumulating.
-
-month,year  Vendor Identifier               Rights Holder
-(2014, 5)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes      -456
-                                            Mares Filmes     -200
-            0257_20131115_SOFA_ELPASEO      Cineplex        -1050
-(2014, 6)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes      -456
-                                            Mares Filmes     -200
-            0257_20131115_SOFA_ELPASEO      Cineplex        -1050
-(2014, 7)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes      -456
-                                            Mares Filmes     -200
-            0257_20131115_SOFA_ELPASEO      Cineplex         -540
-
-Should be:
-(2014, 5)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes      -228
-                                            Mares Filmes     -200
-            0257_20131115_SOFA_ELPASEO      Cineplex         -530
-(2014, 6)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes      -228
-                                            Mares Filmes     -200
-            0257_20131115_SOFA_ELPASEO      Cineplex         -530
-(2014, 7)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes      -228
-                                            Mares Filmes     -200
-            0257_20131115_SOFA_ELPASEO      Cineplex         -530
-            
-'''
 df_cumu_recoupable = df_comb[columns_accrual].groupby(balance_groupby)['Encoding U$'].sum()
-print df_cumu_recoupable
+#print df_cumu_recoupable
 
 #BALANCE#
 #Find the difference/balance of the cumulative royalty and cumulative recoupable
 df_balance = df_cumu_royalty + df_cumu_recoupable
-#print df_balance
+print df_balance
 
 #POSITIVE BALANCE#
 # select only where Balances are Positive,
 df_positive_balance = df_balance.mask(df_balance < 0)
 # then replace the NaN for 0.
-df_positive_balance = df_positive_balance.fillna(value=0)
-#print df_positive_balance
+#df_positive_balance = df_positive_balance.fillna(value=0)
+print df_positive_balance
 
-
-#PAYMENT OWED#
+'''
+Issue with payment owed:  when there a positive balance at the beginning of the series, the diff() makes it a NaN instead of a value.
+'''
+#CHANGE IN POSITIVE BALANCE - PAYMENT OWED#
 #Find the difference between 2 months, considering vendorid and rightsholder. Means to groupby vendorid and rightsholder first. 
 df_payment_owed = df_positive_balance.groupby(level=[1,2]).diff()
 #fill the NaN with 0
-df_payment_owed = df_payment_owed.fillna(value=0)
-#print df_payment_owed
+#df_payment_owed = df_payment_owed.fillna(value=0)
+print df_payment_owed
+
 
 
 #### EXPORTING BALANCE REPORT ####
