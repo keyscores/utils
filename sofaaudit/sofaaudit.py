@@ -157,39 +157,66 @@ df_accrual_revenue   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Ne
 df_accrual_royalty   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Royalty'].sum()
 df_accrual_units     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Units'].sum()
 
+
+'''
 ### TODO : Create correct Tax logic #####
+apple_provider = df_comb['Provider'] == 'APPLE'
+net_now_provider = df_comb['Provider'] == 'NET NOW'
+df_comb['Tax'] = df_comb['Net revenue'][apple_provider] * df_comb['Tax Witholding'][apple_provider]
+df_comb['Tax2'] = df_comb['Net revenue'][net_now_provider] * df_comb['NOW Tax'][net_now_provider]
+
+'''
+
+
 df_accrual_tax       = df_comb[columns_accrual].groupby(accrual_groupbycols)['Tax'].sum()
 df_accrual_after_tax = df_comb[columns_accrual].groupby(accrual_groupbycols)['After tax'].sum()
 df_accrual_fee_value = df_comb[columns_accrual].groupby(accrual_groupbycols)['Fee value'].sum()
 df_accrual_media     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Media'].sum()
 df_accrual_encoding  = df_comb[columns_accrual].groupby(accrual_groupbycols)['Encoding U$'].sum()
-df_accrual_recoupable = df_accrual_media + df_accrual_encoding
 
-#### EXPORTING ACCRUAL REPORT ####
+'''
+# TODO Create Recoupable
+df_comb['recoupable'] = df_accrual_encoding['Encoding U$'] + df_accrual_encoding['Media']
+print df_comb['recoupable']
+'''
+
+
+'''
+#### IGNORE EXPORTING ACCRUAL REPORT ####
 #df_accrual = pd.DataFrame([df_accrual_royalty,df_accrual_recoupable]).transpose()
 #df_accrual.to_csv(filename_accrual, encoding='utf-8')
-####
+'''
 
-#### PREPARING BALANCE REPORT ####
+####  BALANCE CALCULATIONS ####
 # Get Royalty and groupby only DATE,VENDOR ID,RIGHTS HOLDER
 df_royalty = df_comb[columns_accrual].groupby(['month,year','Vendor Identifier','Rights Holder'])['Royalty'].sum()
 print df_royalty
 
-#  Get the cumulative sum of Royalty
-df_cumu_royalty = df_comb[columns_accrual].groupby(['month,year','Vendor Identifier','Rights Holder'])['Royalty'].sum().groupby(level=[0,1]).cumsum()
+# ROYALTY BALANCE Get the cumulative sum of Royalty
+df_cumu_royalty = df_comb[columns_accrual].groupby(['month,year','Vendor Identifier','Rights Holder'])['Royalty'].sum().groupby(level=[0,1,2]).cumsum()
 print df_cumu_royalty
 
-# Get the cumulative sum of Recoupable
-df_cumu_recoupable = df_comb[columns_accrual].groupby(['month,year','Vendor Identifier','Rights Holder'])['Encoding U$'].sum().groupby(level=[0,1]).cumsum()
+# RECOUPABLE BALANCE Get the cumulative sum of Recoupable
+'''
+TODO: Should be Recoupable. Using Encoding as a placeholder.
+'''
+df_cumu_recoupable = df_comb[columns_accrual].groupby(['month,year','Vendor Identifier','Rights Holder'])['Encoding U$'].sum().groupby(level=[0,1,2]).cumsum()
 print df_cumu_recoupable
 
-# Find the difference/balance of the cumulative royalty and cumulative recoupable
+# BALANCE Find the difference/balance of the cumulative royalty and cumulative recoupable
 df_balance = df_cumu_royalty + df_cumu_recoupable
 print df_balance
 
-# Select only where Balances are Positive
+# POSITIVE BALANCE select only where Balances are Positive,
 df_positive_balance = df_balance.mask(df_balance < 0)
+# then replace the NaN for 0.
+df_positive_balance = df_positive_balance.fillna(value=0)
 print df_positive_balance
+
+#Find difference between months
+
+df_payment_owed = df_positive_balance.diff()
+print df_payment_owed
 
 
 
