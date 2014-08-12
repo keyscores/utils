@@ -1,5 +1,4 @@
 #outputs
-sofaaudit/output/*.csv
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
