@@ -13,15 +13,15 @@ filename_accrual="Accrual.csv"
 
 df_sales = pd.read_excel(filename_in,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 
-# NELSON: This line was added to append another table similar to "input.Sales" 
+# NELSON: This line was added to append Cable.xslx another table similar to "input.Sales" 
 df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
-
+# append cable.xlsx
 df_sales = df_sales.append(df_cable)
 
 df_sales = df_sales[df_sales['Royalty Price'] != 0]
 df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
 
-# NELSON: "input.Encoding.Now Tax" is another column being read
+# NELSON: "input.Encoding.Now Tax" is another column being read. It's neceesary for accurate calculation of TAX further down.
 df_encd  = pd.read_excel(filename_in,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','NOW Tax','Rights Holder']]
 df_regions = pd.read_excel(filename_in,sheetname="Region")
 df_currency = pd.read_excel(filename_in,sheetname="Currency")
@@ -89,6 +89,7 @@ for date in dates:
 
 df_encd[u'Mês Início Fiscal'] = pd.to_datetime(df_encd[u'Mês Início Fiscal'])
 
+# NELSON: These warnings don't always make sense. It is possible that a title is sold in only 1 region. But this check tried to make it match all 4 regions.
 # checking if we have all the encodings we need
 for title in titles:    
     for region in regions:
@@ -171,6 +172,7 @@ df_comb = df_comb.drop(['Royalty Price','Product Type Identifier','Units','Excha
 
 # Rights Holder domain
 rightsholders = list(set(df_comb['Rights Holder'].values))
+
 
 #print df_comb.columns
 # checking if we have all the rights holders we need
