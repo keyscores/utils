@@ -14,10 +14,11 @@ filename_accrual="output/Accrual.csv"
 
 df_sales = pd.read_excel(filename_apple,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 
-# NELSON: This line was added to append Cable.xslx another table similar to "input.Sales" 
 df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+
+####NOT APPENDING CABLE FOR NOW
 # append cable.xlsx
-df_sales = df_sales.append(df_cable)
+#df_sales = df_sales.append(df_cable)
 
 df_sales = df_sales[df_sales['Royalty Price'] != 0]
 df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
@@ -136,7 +137,7 @@ df_comb['Recoupable'] = df_comb.apply(lambda x: fiscal_year(x,'Recoupable'),axis
 del df_comb[u'Mês Início Fiscal']
 #del df_comb['Media']
 #del df_comb['Encoding U$']
-
+''
 # output calculations
 df_comb['Net revenue']=df_comb['Royalty Price']*df_comb['Units']*df_comb['Exchange Rate']
 #df_comb['Tax']=df_comb['Net revenue']*df_comb['Tax Witholding']
@@ -192,18 +193,18 @@ balance_groupby = ['month,year','Vendor Identifier','Rights Holder']
 
 # Get Royalty and groupby only DATE,VENDOR ID,RIGHTS HOLDER
 df_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum()
-#print df_royalty
+#df_royalty
 
 # ROYALTY BALANCE Get the cumulative sum of Royalty
-df_cumu_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum().groupby(level=[0,1,2]).cumsum()
+df_cumu_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum().groupby(level=[1,2]).cumsum()
 #print df_cumu_royalty
 
 # RECOUPABLE BALANCE Get the cumulative sum of Recoupable
 '''
 TODO: Should be Recoupable. Using Encoding as a placeholder.
 '''
-df_cumu_recoupable = df_comb[columns_accrual].groupby(balance_groupby)['Encoding U$'].sum().groupby(level=[0,1,2]).cumsum()
-#print df_cumu_recoupable
+df_cumu_recoupable = df_comb[columns_accrual].groupby(['month,year','Vendor Identifier','Rights Holder'])['Encoding U$'].sum()
+print df_cumu_recoupable
 
 #BALANCE#
 #Find the difference/balance of the cumulative royalty and cumulative recoupable
@@ -223,13 +224,12 @@ df_positive_balance = df_positive_balance.fillna(value=0)
 df_payment_owed = df_positive_balance.groupby(level=[1,2]).diff()
 #fill the NaN with 0
 df_payment_owed = df_payment_owed.fillna(value=0)
-print df_payment_owed
+#print df_payment_owed
 
 
 #### EXPORTING BALANCE REPORT ####
-df_balance_report = pd.DataFrame([df_payment_owed,df_positive_balance]).transpose()
-df_balance_report.to_csv(filename_balance, encoding='utf-8')
-
+df_balance_report = pd.DataFrame([df_balance,df_payment_owed]).transpose()
+#df_balance_report.to_csv(filename_balance, encoding='utf-8')
 
 
 '''
