@@ -13,6 +13,7 @@ filename_accrual="Accrual.csv"
 
 df_sales = pd.read_excel(filename_in,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 
+# NELSON: This line was added to append another table similar to "input.Sales" 
 df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 
 df_sales = df_sales.append(df_cable)
@@ -20,6 +21,7 @@ df_sales = df_sales.append(df_cable)
 df_sales = df_sales[df_sales['Royalty Price'] != 0]
 df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
 
+# NELSON: "input.Encoding.Now Tax" is another column being read
 df_encd  = pd.read_excel(filename_in,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','NOW Tax','Rights Holder']]
 df_regions = pd.read_excel(filename_in,sheetname="Region")
 df_currency = pd.read_excel(filename_in,sheetname="Currency")
@@ -140,6 +142,7 @@ df_comb['Net revenue']=df_comb['Royalty Price']*df_comb['Units']*df_comb['Exchan
 apple_provider = df_comb['Provider'] == 'APPLE'
 net_now_provider = df_comb['Provider'] == 'NET NOW'
 
+# NELSON: The tax has a special rule. Where sales.provider=='Apple' the Value multuplied is 'Tax Witholding', if it is provider == 'Net Now' then it is encoding.Now_Tax
 df_comb['Tax'] = df_comb['Net revenue'][apple_provider] * df_comb['Tax Witholding'][apple_provider]
 df_comb['Tax'] = df_comb['Net revenue'][net_now_provider] * df_comb['NOW Tax'][net_now_provider]
 
