@@ -188,36 +188,48 @@ print df_comb['recoupable']
 '''
 
 ####  BALANCE CALCULATIONS ####
+balance_groupby = ['month,year','Vendor Identifier','Rights Holder']
+
 # Get Royalty and groupby only DATE,VENDOR ID,RIGHTS HOLDER
-df_royalty = df_comb[columns_accrual].groupby(['month,year','Vendor Identifier','Rights Holder'])['Royalty'].sum()
-print df_royalty
+df_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum()
+#print df_royalty
 
 # ROYALTY BALANCE Get the cumulative sum of Royalty
-df_cumu_royalty = df_comb[columns_accrual].groupby(['month,year','Vendor Identifier','Rights Holder'])['Royalty'].sum().groupby(level=[0,1,2]).cumsum()
-print df_cumu_royalty
+df_cumu_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum().groupby(level=[0,1,2]).cumsum()
+#print df_cumu_royalty
 
 # RECOUPABLE BALANCE Get the cumulative sum of Recoupable
 '''
 TODO: Should be Recoupable. Using Encoding as a placeholder.
 '''
-df_cumu_recoupable = df_comb[columns_accrual].groupby(['month,year','Vendor Identifier','Rights Holder'])['Encoding U$'].sum().groupby(level=[0,1,2]).cumsum()
-print df_cumu_recoupable
+df_cumu_recoupable = df_comb[columns_accrual].groupby(balance_groupby)['Encoding U$'].sum().groupby(level=[0,1,2]).cumsum()
+#print df_cumu_recoupable
 
-# BALANCE Find the difference/balance of the cumulative royalty and cumulative recoupable
+# BALANCE#
+#Find the difference/balance of the cumulative royalty and cumulative recoupable
 df_balance = df_cumu_royalty + df_cumu_recoupable
-print df_balance
+#print df_balance
 
-# POSITIVE BALANCE select only where Balances are Positive,
+# POSITIVE BALANCE#
+# select only where Balances are Positive,
 df_positive_balance = df_balance.mask(df_balance < 0)
 # then replace the NaN for 0.
 df_positive_balance = df_positive_balance.fillna(value=0)
-print df_positive_balance
+#print df_positive_balance
 
-#Find difference between months
 
-df_payment_owed = df_positive_balance.diff()
-print df_payment_owed
+#PAYMENT OWED#
+#Find the difference between 2 months, considering vendorid and rightsholder. Means to groupby vendorid and rightsholder first. 
+df_payment_owed = df_positive_balance.groupby(level=[1,2]).diff()
+#fill the NaN with 0
+df_payment_owed = df_payment_owed.fillna(value=0)
+#print df_payment_owed
 
+
+#### PREPARE BALANCE REPORT ####
+df_balance_report = pd.DataFrame([df_payment_owed,df_positive_balance]).transpose()
+print df_balance_report
+df_balance_report.to_csv(filename_balance, encoding='utf-8')
 
 
 '''
