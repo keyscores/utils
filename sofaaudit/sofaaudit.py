@@ -58,7 +58,7 @@ min_date_p = (min_date.year,min_date.month)
 max_date_p = (max_date.year,max_date.month)
 
 # adding all possible in between dates
-
+'''
 dates = [min_date_p]
 while(1):
     if dates[-1]==max_date_p:
@@ -68,7 +68,7 @@ while(1):
             dates.append((dates[-1][0]+1,1))
         else:
             dates.append((dates[-1][0],dates[-1][1]+1))
-
+'''
 # getting region from country by merging with regions sheet
 df_sales = pd.merge(df_sales,df_regions,on="Country Code")                
                 
