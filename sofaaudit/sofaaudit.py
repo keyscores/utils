@@ -8,7 +8,7 @@ import numpy as np
 #filename="Sofa7Krecords-2.xlsx"
 filename_apple="input/Apple.xlsx"
 filename_cable="input/Cable.xlsx"
-filename_lookup="Lookup.xlsx"
+filename_lookup="input/Lookup.xlsx"
 filename_balance="output/Balance.csv"
 filename_accrual="output/Accrual.csv"
 
@@ -200,17 +200,20 @@ df_cumu_recoupable = df_comb[columns_accrual].groupby(balance_groupby)['Encoding
 #BALANCE#
 #Find the difference/balance of the cumulative royalty and cumulative recoupable
 df_balance = df_cumu_royalty + df_cumu_recoupable
-print df_balance
+#print df_balance
 
 #POSITIVE BALANCE#
 # select only where Balances are Positive,
 df_positive_balance = df_balance.mask(df_balance < 0)
 # then replace the NaN for 0.
 #df_positive_balance = df_positive_balance.fillna(value=0)
-print df_positive_balance
+#print df_positive_balance
 
 '''
 Issue with payment owed:  when there a positive balance at the beginning of the series, the diff() makes it a NaN instead of a value.
+(2014, 5)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes             NaN
+should be
+(2014, 5)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes             40
 '''
 #CHANGE IN POSITIVE BALANCE - PAYMENT OWED#
 #Find the difference between 2 months, considering vendorid and rightsholder. Means to groupby vendorid and rightsholder first. 
