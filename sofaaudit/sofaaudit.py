@@ -76,18 +76,21 @@ df_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum()
 
 # CUMULATIVE ROYALTY Get the cumulative sum of Royalty
 df_cumu_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum().groupby(level=[1,2]).cumsum()
+df_cumu_royalty.name = "Royalty"
 
 # CUMULATIVE RECOUPABLE Get the cumulative sum of Recoupable
 df_cumu_recoupable = df_comb[columns_accrual].groupby(balance_groupby)['Recoup'].mean()
 
 #BALANCE - Find the difference/balance of the cumulative royalty and cumulative recoupable
 df_balance = df_cumu_royalty + df_cumu_recoupable
+df_balance.name = "Balance"
 #print df_balance
 
 #POSITIVE BALANCE select only where Balances are Positive,
 df_positive_balance = df_balance.mask(df_balance < 0)
 # then replace the NaN for 0.
 df_positive_balance = df_positive_balance.fillna(value=0)
+df_positive_balance.name = "Positive Balance"
 
 #CHANGE IN POSITIVE BALANCE - PAYMENT OWED#
 #Find the difference between 2 months, considering vendorid and rightsholder. Means to groupby vendorid and rightsholder first. 
@@ -122,6 +125,7 @@ def diff_without_changing_first_month_value(series, groupby_level):
 Only working for small samples not working on Apple-Large.xlsx
 '''
 df_payment_owed = diff_without_changing_first_month_value(df_positive_balance, groupby_level=[1,2])
+df_payment_owed.name = "Payment Owed"
 
 '''
 perhaps try with shifting back and forth...
