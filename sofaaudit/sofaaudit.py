@@ -77,12 +77,7 @@ while(1):
         else:
             dates.append((dates[-1][0],dates[-1][1]+1))
 '''
-# getting region from country by merging with regions sheet
-df_sales = pd.merge(df_sales,df_regions,on="Country Code")                
-                
-del df_sales['Country Code']
-del df_sales['date']
-del df_regions
+
 '''
 # used regions domain
 regions = list(set(df_sales['Region'].values))
@@ -110,6 +105,14 @@ for title in titles:
             df_encd = df_encd.append([new_encoding])
 '''
 ### MERGES
+
+# getting region from country by merging with regions sheet
+df_sales = pd.merge(df_sales,df_regions,on="Country Code")                
+                
+del df_sales['Country Code']
+del df_sales['date']
+del df_regions
+
 # getting associated encoding, tax etc per sale
 df_comb = pd.merge(df_sales,df_encd,on=['Vendor Identifier','Region'])
 
