@@ -163,6 +163,7 @@ columns_accrual = ['month,year','Region','Rights Holder','Vendor Identifier','Pr
 accrual_groupbycols = ['month,year','Vendor Identifier','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
 
 df_accrual_revenue   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Net revenue'].sum()
+print df_accrual_revenue
 df_accrual_royalty   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Royalty'].sum()
 df_accrual_units     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Units'].sum()
 
