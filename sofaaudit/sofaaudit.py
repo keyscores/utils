@@ -69,6 +69,7 @@ df_accrual_tax       = df_comb[columns_accrual].groupby(accrual_groupbycols)['Ta
 #print df_accrual_tax  
 df_accrual_after_tax = df_comb[columns_accrual].groupby(accrual_groupbycols)['After tax'].sum()
 df_accrual_fee_value = df_comb[columns_accrual].groupby(accrual_groupbycols)['Fee value'].sum()
+df_accrual_recoupable = df_comb[columns_accrual].groupby(accrual_groupbycols)['Recoup'].sum()
 
 
 ####  BALANCE CALCULATIONS ####
@@ -113,8 +114,8 @@ print df_payment_owed
 
 
 #### EXPORTING ACCRUAL REPORT ####
-#df_accrual = pd.DataFrame([df_accrual_royalty,df_accrual_recoupable]).transpose()
-#df_accrual.to_csv(filename_accrual, encoding='utf-8')
+df_accrual = pd.DataFrame([df_accrual_royalty,df_accrual_recoupable]).transpose()
+df_accrual.to_csv(filename_accrual, encoding='utf-8')
 
 
 #### EXPORTING BALANCE REPORT ####
