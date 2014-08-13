@@ -101,8 +101,8 @@ for title in titles:
             new_encoding={'Vendor Identifier':title,'Region':region,u'Comissão':0.0,'Encoding U$':0.0,'Media':0.0,u'Mês Início Fiscal':min_date,'Tax Witholding':0.0,'Rights Holder':''}
             df_encd = df_encd.append([new_encoding])
 
+### MERGES
 # getting associated encoding, tax etc per sale
-
 df_comb = pd.merge(df_sales,df_encd,on=['Vendor Identifier','Region'])
 
 del df_sales
