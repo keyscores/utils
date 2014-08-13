@@ -35,14 +35,15 @@ df_encd[u'Mês Início Fiscal'] = df_encd[u'Mês Início Fiscal'].apply(first_da
 df_regions = pd.read_excel(filename_lookup,sheetname="Region")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
 
-# getting month,year tuples
-df_sales['date']=pd.to_datetime(df_sales['Download Date (PST)'])
-df_sales['month,year']=df_sales['date'].apply(lambda x: (x.year,x.month))
+# renaming 
+df_sales['month,year']=pd.to_datetime(df_sales['Download Date (PST)'])
+#df_sales['month,year']=df_sales['date'].apply(lambda x: (x.year,x.month))
 del df_sales['Download Date (PST)']
 
 df_currency['month,year']=pd.to_datetime(df_currency['Month'])
-df_currency['month,year']=df_currency['month,year'].apply(lambda x: (x.year,x.month))
+#df_currency['month,year']=df_currency['month,year'].apply(lambda x: (x.year,x.month))
 del df_currency['Month']
+
 '''
 # domains
 # titles domain
@@ -110,7 +111,7 @@ for title in titles:
 df_sales = pd.merge(df_sales,df_regions,on="Country Code")                
                 
 del df_sales['Country Code']
-del df_sales['date']
+#del df_sales['month,year']
 del df_regions
 
 # getting associated encoding, tax etc per sale
@@ -154,10 +155,10 @@ del df_comb[u'Mês Início Fiscal']
 df_comb['Net revenue']=df_comb['Royalty Price']*df_comb['Units']*df_comb['Exchange Rate']
 #df_comb['Tax']=df_comb['Net revenue']*df_comb['Tax Witholding']
 
+# TAX The tax has a special rule. Where sales.provider=='Apple' the Value multuplied is 'Tax Witholding', if it is provider == 'Net Now' then it is encoding.Now_Tax
+
 apple_provider = df_comb['Provider'] == 'APPLE'
 net_now_provider = df_comb['Provider'] == 'NET NOW'
-
-# The tax has a special rule. Where sales.provider=='Apple' the Value multuplied is 'Tax Witholding', if it is provider == 'Net Now' then it is encoding.Now_Tax
 df_comb['Tax'] = (df_comb['Net revenue'] * df_comb['Tax Witholding']).where(apple_provider)
 df_comb['Tax'] = (df_comb['Net revenue'] * df_comb['NOW Tax']).where(net_now_provider, other=df_comb['Tax'])
 
@@ -233,7 +234,7 @@ print df_payment_owed
 
 #### EXPORTING BALANCE REPORT ####
 df_balance_report = pd.DataFrame([df_balance,df_payment_owed]).transpose()
-#df_balance_report.to_csv(filename_balance, encoding='utf-8')
+df_balance_report.to_csv(filename_balance, encoding='utf-8')
 
 
 '''
