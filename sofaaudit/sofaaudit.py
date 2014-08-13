@@ -114,11 +114,20 @@ def diff_without_changing_first_month_value(series, groupby_level):
     diff = series_with_zero_month.groupby(level=groupby_level).diff()
     required_series = diff.ix[values_count:]
     return required_series
+    '''
+    Only working for small samples not working on Apple-Large.xlsx
+    '''
+    #df_payment_owed = diff_without_changing_first_month_value(df_positive_balance, groupby_level=[1,2])
 
-df_payment_owed = diff_without_changing_first_month_value(df_positive_balance, groupby_level=[1,2])
+'''
+perhaps try with shifting back and forth...
+'''
+#print df_positive_balance.shift(periods=1, freq= 'M')
+print df_positive_balance.groupby(level=[1,2]).diff()
+
 #fill the NaN with 0
 #df_payment_owed = df_payment_owed.fillna(value=0)
-print df_payment_owed
+#print df_payment_owed
 
 #### EXPORTING ACCRUAL REPORT ####
 df_accrual = pd.DataFrame([df_accrual_revenue,df_accrual_units,df_accrual_tax,df_accrual_after_tax,df_accrual_fee_value,df_accrual_royalty,df_accrual_recoupable]).transpose()
@@ -126,6 +135,6 @@ df_accrual.to_csv(filename_accrual, encoding='utf-8')
 
 
 #### EXPORTING BALANCE REPORT ####
-df_balance_report = pd.DataFrame([df_cumu_royalty,df_cumu_recoupable,df_balance,df_positive_balance,df_accrual_royalty,df_payment_owed]).transpose()
-df_balance_report.to_csv(filename_balance, encoding='utf-8')
+#df_balance_report = pd.DataFrame([df_cumu_royalty,df_cumu_recoupable,df_balance,df_positive_balance,df_accrual_royalty,df_payment_owed]).transpose()
+#df_balance_report.to_csv(filename_balance, encoding='utf-8')
 
