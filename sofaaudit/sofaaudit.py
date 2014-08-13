@@ -98,7 +98,30 @@ df_positive_balance = df_balance.mask(df_balance < 0)
 # then replace the NaN for 0.
 df_positive_balance = df_positive_balance.fillna(value=0)
 print df_positive_balance
-	
+
+from collections import OrderedDict
+from dateutil.relativedelta import relativedelta
+def diff_without_changing_first_month_value(series, groupby_level):
+    zero_month = series.index.levels[0][0] - relativedelta(months=1)
+
+    # Using OrderedDict for getting ordered set of each elements in series.index.labels
+    labels = [OrderedDict(zip(each, [None]*len(each))).keys() for each in series.index.labels]
+
+    # no of values required for zero month
+    values_count = len(labels[1])
+
+    zero_month_index = pd.MultiIndex(
+        levels = [[zero_month], series.index.levels[1], series.index.levels[2]],
+        labels = [[0]*values_count, labels[1], labels[2]],
+        names = series.index.names,
+    )
+    zero_month_series = pd.Series([0]*values_count, index=zero_month_index)
+    series_with_zero_month = zero_month_series.append(series)
+
+    diff = series_with_zero_month.groupby(level=groupby_level).diff()
+    required_series = diff.ix[values_count:]
+    return required_series
+
 '''
 Issue with payment owed:  when there a positive balance at the beginning of the series, the diff() makes it a NaN instead of a value.
 (2014, 5)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes             NaN
@@ -107,7 +130,7 @@ should be
 '''
 #CHANGE IN POSITIVE BALANCE - PAYMENT OWED#
 #Find the difference between 2 months, considering vendorid and rightsholder. Means to groupby vendorid and rightsholder first. 
-df_payment_owed = df_positive_balance.groupby(level=[1,2]).diff()
+df_payment_owed = diff_without_changing_first_month_value(df_positive_balance, groupby_level=[1,2])
 #fill the NaN with 0
 #df_payment_owed = df_payment_owed.fillna(value=0)
 print df_payment_owed
