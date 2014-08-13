@@ -20,11 +20,18 @@ df_sales = pd.read_excel(filename_apple,sheetname="Sales")[['Vendor Identifier',
 #df_sales = df_sales.append(df_cable)
 ####A
 '''
+
+def first_day_of_month_converter(dt):
+    return datetime.datetime(dt.year, dt.month, 1)
+
 #Clean some values
 df_sales = df_sales[df_sales['Royalty Price'] != 0]
 df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
+df_sales['Download Date (PST)'] = df_sales['Download Date (PST)'].apply(first_day_of_month_converter)
 
 df_encd  = pd.read_excel(filename_lookup,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','NOW Tax','Rights Holder']]
+df_encd[u'Mês Início Fiscal'] = df_encd[u'Mês Início Fiscal'].apply(first_day_of_month_converter)
+
 df_regions = pd.read_excel(filename_lookup,sheetname="Region")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
 
