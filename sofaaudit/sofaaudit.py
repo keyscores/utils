@@ -5,14 +5,14 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Apple-Large.xlsx"
-filename_cable="input/Cable-Large.xlsx"
+filename_apple="input/Apple-Complete.xlsx"
+filename_cable="input/Cable.xlsx"
 filename_lookup="input/Lookup.xlsx"
 filename_balance="output/Balance.csv"
 filename_accrual="output/Accrual.csv"
 
 #### IMPORT WHAT WE NEED ####
-df_sales = pd.read_excel(filename_apple,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+df_sales = pd.read_excel(filename_apple)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 df_sales = df_sales.append(df_cable)
 df_encd  = pd.read_excel(filename_lookup,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','NOW Tax','Rights Holder']]
