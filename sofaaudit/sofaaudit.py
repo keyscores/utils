@@ -19,6 +19,14 @@ df_encd  = pd.read_excel(filename_lookup,sheetname="Encoding")[['Vendor Identifi
 df_regions = pd.read_excel(filename_lookup,sheetname="Region")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
 
+'''
+alternative recoup table
+df_recoup  = pd.read_excel(filename_lookup,sheetname="Encoding")[['Vendor Identifier','Rights Holder','Encoding U$','Media',u'Mês Início Fiscal']]
+df_recoup.set_index([u'Mês Início Fiscal','Vendor Identifier','Rights Holder'], inplace = True)
+df_recoup['Recoupable'] = df_recoup['Encoding U$'] + df_recoup['Media'] 
+'''
+
+
 #### Clean unneeded data ####
 df_sales = df_sales[df_sales['Royalty Price'] != 0]
 df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
