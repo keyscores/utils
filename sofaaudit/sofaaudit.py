@@ -5,7 +5,7 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Apple.xlsx"
+filename_apple="input/Apple-Large.xlsx"
 filename_cable="input/Cable.xlsx"
 filename_lookup="input/Lookup.xlsx"
 filename_balance="output/Balance.csv"
@@ -92,20 +92,23 @@ df_positive_balance = df_positive_balance.fillna(value=0)
 #CHANGE IN POSITIVE BALANCE - PAYMENT OWED#
 #Find the difference between 2 months, considering vendorid and rightsholder. Means to groupby vendorid and rightsholder first. 
 
-from collections import OrderedDict
 from dateutil.relativedelta import relativedelta
 def diff_without_changing_first_month_value(series, groupby_level):
     zero_month = series.index.levels[0][0] - relativedelta(months=1)
 
-    # Using OrderedDict for getting ordered set of each elements in series.index.labels
-    labels = [OrderedDict(zip(each, [None]*len(each))).keys() for each in series.index.labels]
+    labels = []
+    for label1, label2 in zip(series.index.labels[1], series.index.labels[2]):
+        if (label1, label2) not in labels:
+            labels.append((label1, label2))
+    # reverse zip
+    labels = zip(*labels)
 
     # no of values required for zero month
-    values_count = len(labels[1])
+    values_count = len(labels[0])
 
     zero_month_index = pd.MultiIndex(
         levels = [[zero_month], series.index.levels[1], series.index.levels[2]],
-        labels = [[0]*values_count, labels[1], labels[2]],
+        labels = [[0]*values_count, labels[0], labels[1]],
         names = series.index.names,
     )
     zero_month_series = pd.Series([0]*values_count, index=zero_month_index)
@@ -114,16 +117,18 @@ def diff_without_changing_first_month_value(series, groupby_level):
     diff = series_with_zero_month.groupby(level=groupby_level).diff()
     required_series = diff.ix[values_count:]
     return required_series
-    '''
-    Only working for small samples not working on Apple-Large.xlsx
-    '''
-    #df_payment_owed = diff_without_changing_first_month_value(df_positive_balance, groupby_level=[1,2])
+
+'''
+Only working for small samples not working on Apple-Large.xlsx
+'''
+df_payment_owed = diff_without_changing_first_month_value(df_positive_balance, groupby_level=[1,2])
 
 '''
 perhaps try with shifting back and forth...
 '''
 #print df_positive_balance.shift(periods=1, freq= 'M')
-print df_positive_balance.groupby(level=[1,2]).diff()
+print df_payment_owed
+#print df_positive_balance.groupby(level=[1,2]).diff()
 
 #fill the NaN with 0
 #df_payment_owed = df_payment_owed.fillna(value=0)
