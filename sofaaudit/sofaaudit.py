@@ -114,11 +114,11 @@ print df_payment_owed
 
 
 #### EXPORTING ACCRUAL REPORT ####
-df_accrual = pd.DataFrame([df_accrual_royalty,df_accrual_recoupable]).transpose()
+df_accrual = pd.DataFrame([df_accrual_revenue,df_accrual_units,df_accrual_tax,df_accrual_after_tax,df_accrual_fee_value,df_accrual_royalty,df_accrual_recoupable]).transpose()
 df_accrual.to_csv(filename_accrual, encoding='utf-8')
 
 
 #### EXPORTING BALANCE REPORT ####
-df_balance_report = pd.DataFrame([df_cumu_royalty,df_cumu_recoupable,df_balance,df_positive_balance,df_payment_owed]).transpose()
+df_balance_report = pd.DataFrame([df_cumu_royalty,df_cumu_recoupable,df_balance,df_positive_balance,df_accrual_royalty,df_payment_owed]).transpose()
 df_balance_report.to_csv(filename_balance, encoding='utf-8')
 
