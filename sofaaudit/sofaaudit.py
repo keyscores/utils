@@ -6,8 +6,8 @@ import pandas as pd
 import numpy as np
 
 #filename="Sofa7Krecords-2.xlsx"
-filename_apple="Apple.xlsx"
-filename_cable="Cable.xlsx"
+filename_apple="input/Apple.xlsx"
+filename_cable="input/Cable.xlsx"
 filename_lookup="Lookup.xlsx"
 filename_balance="output/Balance.csv"
 filename_accrual="output/Accrual.csv"
