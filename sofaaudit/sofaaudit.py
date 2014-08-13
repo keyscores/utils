@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 filename_apple="input/Apple-Large.xlsx"
-filename_cable="input/Cable.xlsx"
+filename_cable="input/Cable-Large.xlsx"
 filename_lookup="input/Lookup.xlsx"
 filename_balance="output/Balance.csv"
 filename_accrual="output/Accrual.csv"
@@ -65,7 +65,7 @@ df_accrual_units     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Un
 df_accrual_tax       = df_comb[columns_accrual].groupby(accrual_groupbycols)['Tax'].sum()
 df_accrual_after_tax = df_comb[columns_accrual].groupby(accrual_groupbycols)['After tax'].sum()
 df_accrual_fee_value = df_comb[columns_accrual].groupby(accrual_groupbycols)['Fee value'].sum()
-df_accrual_recoupable = df_comb[columns_accrual].groupby(accrual_groupbycols)['Recoup'].sum()
+df_accrual_recoupable = df_comb[columns_accrual].groupby(accrual_groupbycols)['Recoup'].mean()
 
 
 ####  BALANCE CALCULATIONS ####
