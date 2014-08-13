@@ -12,8 +12,12 @@ filename_lookup="input/Lookup.xlsx"
 filename_balance="output/Balance.csv"
 filename_accrual="output/Accrual.csv"
 
-df_sales = pd.read_excel(filename_apple,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 
+### IMPORT WHAT WE NEED
+df_sales = pd.read_excel(filename_apple,sheetname="Sales")[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+df_encd  = pd.read_excel(filename_lookup,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','NOW Tax','Rights Holder']]
+df_regions = pd.read_excel(filename_lookup,sheetname="Region")
+df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
 '''
 ####APPENDING CABLE - DISABLED
 #df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
@@ -21,28 +25,25 @@ df_sales = pd.read_excel(filename_apple,sheetname="Sales")[['Vendor Identifier',
 ####A
 '''
 
+
+
+#Clean uneeded data
+df_sales = df_sales[df_sales['Royalty Price'] != 0]
+df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
+
+# make the dates uniform.
 def first_day_of_month_converter(dt):
     return datetime.datetime(dt.year, dt.month, 1)
 
-#Clean some values
-df_sales = df_sales[df_sales['Royalty Price'] != 0]
-df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1, 1)]
 df_sales['Download Date (PST)'] = df_sales['Download Date (PST)'].apply(first_day_of_month_converter)
-
-df_encd  = pd.read_excel(filename_lookup,sheetname="Encoding")[['Vendor Identifier','Region',u'Comissão','Encoding U$','Media',u'Mês Início Fiscal','Tax Witholding','NOW Tax','Rights Holder']]
 df_encd[u'Mês Início Fiscal'] = df_encd[u'Mês Início Fiscal'].apply(first_day_of_month_converter)
 
-df_regions = pd.read_excel(filename_lookup,sheetname="Region")
-df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
+
 
 # renaming 
 df_sales['month,year']=pd.to_datetime(df_sales['Download Date (PST)'])
-#df_sales['month,year']=df_sales['date'].apply(lambda x: (x.year,x.month))
-del df_sales['Download Date (PST)']
-
 df_currency['month,year']=pd.to_datetime(df_currency['Month'])
-#df_currency['month,year']=df_currency['month,year'].apply(lambda x: (x.year,x.month))
-del df_currency['Month']
+
 
 '''
 # domains
@@ -109,20 +110,13 @@ for title in titles:
 
 # getting region from country by merging with regions sheet
 df_sales = pd.merge(df_sales,df_regions,on="Country Code")                
-                
-del df_sales['Country Code']
-#del df_sales['month,year']
-del df_regions
 
 # getting associated encoding, tax etc per sale
 df_comb = pd.merge(df_sales,df_encd,on=['Vendor Identifier','Region'])
 
-del df_sales
-del df_encd
-
 # getting associated currency per sale, valid on the sale date
 df_comb = pd.merge(df_comb,df_currency,on=['Customer Currency','month,year'])
-del df_currency
+
 '''
 def fiscal_year(row,column):
 
