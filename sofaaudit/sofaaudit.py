@@ -49,7 +49,7 @@ n_regions = len(countries)
 # currencies domain
 currencies = list(set(df_currency['Customer Currency'].values))
 n_currencies = len(currencies)
-
+'''
 # dates domain
 min_date = df_sales['date'].min(axis=1)
 max_date = df_sales['date'].max(axis=1)
@@ -58,7 +58,7 @@ min_date_p = (min_date.year,min_date.month)
 max_date_p = (max_date.year,max_date.month)
 
 # adding all possible in between dates
-'''
+
 dates = [min_date_p]
 while(1):
     if dates[-1]==max_date_p:
