@@ -122,11 +122,9 @@ del df_encd
 # getting associated currency per sale, valid on the sale date
 df_comb = pd.merge(df_comb,df_currency,on=['Customer Currency','month,year'])
 del df_currency
-
+'''
 def fiscal_year(row,column):
-    '''
-    Returning encoding depending if fiscal year started or not (0 if not)
-    '''
+
     month_fiscal=row[u'Mês Início Fiscal'].month
     year_fiscal=row[u'Mês Início Fiscal'].year
     month_cur=row['month,year'][1]
@@ -141,6 +139,7 @@ def fiscal_year(row,column):
         return 0.0
     else:
         return row[column]
+        '''
 '''
 df_comb['Recoupable']=df_comb['Encoding U$']+df_comb['Media']
 
