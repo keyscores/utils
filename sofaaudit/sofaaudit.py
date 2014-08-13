@@ -27,8 +27,7 @@ df_sales = df_sales[df_sales['Download Date (PST)'] >= datetime.datetime(2013, 1
 def first_day_of_month_converter(dt):
     return datetime.datetime(dt.year, dt.month, 1)
 
-df_sales['Download Date (PST)'] = df_sales['Download Date (PST)'].apply(first_day_of_month_converter)
-df_sales['month,year']=pd.to_datetime(df_sales['Download Date (PST)'])
+df_sales['month,year'] = df_sales['Download Date (PST)'].apply(first_day_of_month_converter)
 df_encd[u'Mês Início Fiscal'] = df_encd[u'Mês Início Fiscal'].apply(first_day_of_month_converter)
 df_currency['month,year']=pd.to_datetime(df_currency['Month'])
 
@@ -51,10 +50,8 @@ apple_provider = df_comb['Provider'] == 'APPLE'
 net_now_provider = df_comb['Provider'] == 'NET NOW'
 df_comb['Tax'] = (df_comb['Net revenue'] * df_comb['Tax Witholding']).where(apple_provider)
 df_comb['Tax'] = (df_comb['Net revenue'] * df_comb['NOW Tax']).where(net_now_provider, other=df_comb['Tax'])
-df_comb['Recoup']=df_comb['Encoding U$']-df_comb['Media']
-#print "encoding"
-#print df_comb['Recoup']
 
+df_comb['Recoup']=df_comb['Encoding U$']+df_comb['Media']
 df_comb['After tax']=df_comb['Net revenue']-df_comb['Tax']
 df_comb['Fee value']=df_comb['After tax']*df_comb[u'Comissão']
 df_comb['Royalty']=df_comb['After tax']-df_comb['Fee value']
@@ -66,7 +63,6 @@ df_accrual_revenue   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Ne
 df_accrual_royalty   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Royalty'].sum()
 df_accrual_units     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Units'].sum()
 df_accrual_tax       = df_comb[columns_accrual].groupby(accrual_groupbycols)['Tax'].sum()
-#print df_accrual_tax  
 df_accrual_after_tax = df_comb[columns_accrual].groupby(accrual_groupbycols)['After tax'].sum()
 df_accrual_fee_value = df_comb[columns_accrual].groupby(accrual_groupbycols)['Fee value'].sum()
 df_accrual_recoupable = df_comb[columns_accrual].groupby(accrual_groupbycols)['Recoup'].sum()
@@ -77,27 +73,24 @@ balance_groupby = ['month,year','Vendor Identifier','Rights Holder']
 
 # Get Royalty and groupby only DATE,VENDOR ID,RIGHTS HOLDER
 df_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum()
-#print df_royalty
 
 # CUMULATIVE ROYALTY Get the cumulative sum of Royalty
 df_cumu_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum().groupby(level=[1,2]).cumsum()
-#print df_cumu_royalty
 
 # CUMULATIVE RECOUPABLE Get the cumulative sum of Recoupable
 df_cumu_recoupable = df_comb[columns_accrual].groupby(balance_groupby)['Recoup'].sum()
-print df_cumu_recoupable
 
-#BALANCE#
-#Find the difference/balance of the cumulative royalty and cumulative recoupable
+#BALANCE - Find the difference/balance of the cumulative royalty and cumulative recoupable
 df_balance = df_cumu_royalty + df_cumu_recoupable
 #print df_balance
 
-#POSITIVE BALANCE#
-# select only where Balances are Positive,
+#POSITIVE BALANCE select only where Balances are Positive,
 df_positive_balance = df_balance.mask(df_balance < 0)
 # then replace the NaN for 0.
 df_positive_balance = df_positive_balance.fillna(value=0)
-print df_positive_balance
+
+#CHANGE IN POSITIVE BALANCE - PAYMENT OWED#
+#Find the difference between 2 months, considering vendorid and rightsholder. Means to groupby vendorid and rightsholder first. 
 
 from collections import OrderedDict
 from dateutil.relativedelta import relativedelta
@@ -122,19 +115,10 @@ def diff_without_changing_first_month_value(series, groupby_level):
     required_series = diff.ix[values_count:]
     return required_series
 
-'''
-Issue with payment owed:  when there a positive balance at the beginning of the series, the diff() makes it a NaN instead of a value.
-(2014, 5)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes             NaN
-should be
-(2014, 5)   0144_20121109_MOBZ_HEADHUNTERS  Leda Filmes             40
-'''
-#CHANGE IN POSITIVE BALANCE - PAYMENT OWED#
-#Find the difference between 2 months, considering vendorid and rightsholder. Means to groupby vendorid and rightsholder first. 
 df_payment_owed = diff_without_changing_first_month_value(df_positive_balance, groupby_level=[1,2])
 #fill the NaN with 0
 #df_payment_owed = df_payment_owed.fillna(value=0)
 print df_payment_owed
-
 
 #### EXPORTING ACCRUAL REPORT ####
 df_accrual = pd.DataFrame([df_accrual_revenue,df_accrual_units,df_accrual_tax,df_accrual_after_tax,df_accrual_fee_value,df_accrual_royalty,df_accrual_recoupable]).transpose()
