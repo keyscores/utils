@@ -43,7 +43,7 @@ del df_sales['Download Date (PST)']
 df_currency['month,year']=pd.to_datetime(df_currency['Month'])
 df_currency['month,year']=df_currency['month,year'].apply(lambda x: (x.year,x.month))
 del df_currency['Month']
-
+'''
 # domains
 # titles domain
 titles = list(set(df_sales['Vendor Identifier'].values))
@@ -56,7 +56,8 @@ n_regions = len(countries)
 # currencies domain
 currencies = list(set(df_currency['Customer Currency'].values))
 n_currencies = len(currencies)
-
+'''
+'''
 # dates domain
 min_date = df_sales['date'].min(axis=1)
 max_date = df_sales['date'].max(axis=1)
@@ -75,18 +76,18 @@ while(1):
             dates.append((dates[-1][0]+1,1))
         else:
             dates.append((dates[-1][0],dates[-1][1]+1))
-
+'''
 # getting region from country by merging with regions sheet
 df_sales = pd.merge(df_sales,df_regions,on="Country Code")                
                 
 del df_sales['Country Code']
 del df_sales['date']
 del df_regions
-
+'''
 # used regions domain
 regions = list(set(df_sales['Region'].values))
 n_regions = len(regions)
-'''
+
 ### THIS IS UNECCESSARY It breaks cumulative cumulative sum of Recoupable
 # filing empty dates 
 for date in dates:
@@ -96,7 +97,7 @@ for date in dates:
             df_sales = df_sales.append([new_row])
             #df_sales.append({'Vendor Identifier':title,'month,year':date,'Region':region,'Units':0,'Customer Currency':'USD','Royalty Price':0},ignore_index=True)
 '''
-
+'''
 df_encd[u'Mês Início Fiscal'] = pd.to_datetime(df_encd[u'Mês Início Fiscal'])
 
 # NELSON: These warnings don't always make sense. It is possible that a title is sold in only 1 region. But this check tried to make it match all 4 regions.
@@ -107,9 +108,9 @@ for title in titles:
             print "Warning:\n\t We are missing the encoding value for vendor_id: ",title,"in region: ",region,"Rights Holder: "
             new_encoding={'Vendor Identifier':title,'Region':region,u'Comissão':0.0,'Encoding U$':0.0,'Media':0.0,u'Mês Início Fiscal':min_date,'Tax Witholding':0.0,'Rights Holder':''}
             df_encd = df_encd.append([new_encoding])
-
+'''
+### MERGES
 # getting associated encoding, tax etc per sale
-
 df_comb = pd.merge(df_sales,df_encd,on=['Vendor Identifier','Region'])
 
 del df_sales
@@ -137,7 +138,7 @@ def fiscal_year(row,column):
         return 0.0
     else:
         return row[column]
-
+'''
 df_comb['Recoupable']=df_comb['Encoding U$']+df_comb['Media']
 
 # setting Recoupable to 0 before the start of the fiscal year (by month)
@@ -145,18 +146,16 @@ df_comb['Recoupable'] = df_comb.apply(lambda x: fiscal_year(x,'Recoupable'),axis
 del df_comb[u'Mês Início Fiscal']
 #del df_comb['Media']
 #del df_comb['Encoding U$']
-''
-# output calculations
+'''
+
+#### ACCRUAL CALCULATIONS ######
 df_comb['Net revenue']=df_comb['Royalty Price']*df_comb['Units']*df_comb['Exchange Rate']
 #df_comb['Tax']=df_comb['Net revenue']*df_comb['Tax Witholding']
 
 apple_provider = df_comb['Provider'] == 'APPLE'
 net_now_provider = df_comb['Provider'] == 'NET NOW'
 
-# NELSON: The tax has a special rule. Where sales.provider=='Apple' the Value multuplied is 'Tax Witholding', if it is provider == 'Net Now' then it is encoding.Now_Tax
-#df_comb['Tax']=df_comb['Net revenue']*df_comb['Tax Witholding']
-
-### TODO : Create correct Tax logic #####
+# The tax has a special rule. Where sales.provider=='Apple' the Value multuplied is 'Tax Witholding', if it is provider == 'Net Now' then it is encoding.Now_Tax
 df_comb['Tax'] = (df_comb['Net revenue'] * df_comb['Tax Witholding']).where(apple_provider)
 df_comb['Tax'] = (df_comb['Net revenue'] * df_comb['NOW Tax']).where(net_now_provider, other=df_comb['Tax'])
 
@@ -171,6 +170,7 @@ accrual_groupbycols = ['month,year','Vendor Identifier','Region','Rights Holder'
 
 df_accrual_revenue   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Net revenue'].sum()
 df_accrual_royalty   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Royalty'].sum()
+print df_accrual_royalty
 df_accrual_units     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Units'].sum()
 
 
