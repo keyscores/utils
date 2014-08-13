@@ -147,7 +147,13 @@ apple_provider = df_comb['Provider'] == 'APPLE'
 net_now_provider = df_comb['Provider'] == 'NET NOW'
 
 # NELSON: The tax has a special rule. Where sales.provider=='Apple' the Value multuplied is 'Tax Witholding', if it is provider == 'Net Now' then it is encoding.Now_Tax
-df_comb['Tax']=df_comb['Net revenue']*df_comb['Tax Witholding']
+#df_comb['Tax']=df_comb['Net revenue']*df_comb['Tax Witholding']
+
+### TODO : Create correct Tax logic #####
+df_comb['Tax'] = (df_comb['Net revenue'] * df_comb['Tax Witholding']).where(apple_provider)
+df_comb['Tax'] = (df_comb['Net revenue'] * df_comb['NOW Tax']).where(net_now_provider, other=df_comb['Tax'])
+
+print df_comb['Tax']
 
 df_comb['After tax']=df_comb['Net revenue']-df_comb['Tax']
 df_comb['Fee value']=df_comb['After tax']*df_comb[u'Comissão']
@@ -161,14 +167,6 @@ df_accrual_royalty   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Ro
 df_accrual_units     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Units'].sum()
 
 
-'''
-### TODO : Create correct Tax logic #####
-apple_provider = df_comb['Provider'] == 'APPLE'
-net_now_provider = df_comb['Provider'] == 'NET NOW'
-df_comb['Tax'] = df_comb['Net revenue'][apple_provider] * df_comb['Tax Witholding'][apple_provider]
-df_comb['Tax2'] = df_comb['Net revenue'][net_now_provider] * df_comb['NOW Tax'][net_now_provider]
-
-'''
 df_accrual_tax       = df_comb[columns_accrual].groupby(accrual_groupbycols)['Tax'].sum()
 
 df_accrual_after_tax = df_comb[columns_accrual].groupby(accrual_groupbycols)['After tax'].sum()
