@@ -130,7 +130,7 @@ def fiscal_year(row,column):
         return 0.0
     else:
         return row[column]
-
+'''
 df_comb['Recoupable']=df_comb['Encoding U$']+df_comb['Media']
 
 # setting Recoupable to 0 before the start of the fiscal year (by month)
@@ -138,7 +138,8 @@ df_comb['Recoupable'] = df_comb.apply(lambda x: fiscal_year(x,'Recoupable'),axis
 del df_comb[u'Mês Início Fiscal']
 #del df_comb['Media']
 #del df_comb['Encoding U$']
-''
+'''
+
 # output calculations
 df_comb['Net revenue']=df_comb['Royalty Price']*df_comb['Units']*df_comb['Exchange Rate']
 #df_comb['Tax']=df_comb['Net revenue']*df_comb['Tax Witholding']
@@ -146,10 +147,7 @@ df_comb['Net revenue']=df_comb['Royalty Price']*df_comb['Units']*df_comb['Exchan
 apple_provider = df_comb['Provider'] == 'APPLE'
 net_now_provider = df_comb['Provider'] == 'NET NOW'
 
-# NELSON: The tax has a special rule. Where sales.provider=='Apple' the Value multuplied is 'Tax Witholding', if it is provider == 'Net Now' then it is encoding.Now_Tax
-#df_comb['Tax']=df_comb['Net revenue']*df_comb['Tax Witholding']
-
-### TODO : Create correct Tax logic #####
+# The tax has a special rule. Where sales.provider=='Apple' the Value multuplied is 'Tax Witholding', if it is provider == 'Net Now' then it is encoding.Now_Tax
 df_comb['Tax'] = (df_comb['Net revenue'] * df_comb['Tax Witholding']).where(apple_provider)
 df_comb['Tax'] = (df_comb['Net revenue'] * df_comb['NOW Tax']).where(net_now_provider, other=df_comb['Tax'])
 
