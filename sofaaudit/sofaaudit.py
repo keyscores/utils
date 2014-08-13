@@ -36,7 +36,7 @@ del df_sales['Download Date (PST)']
 df_currency['month,year']=pd.to_datetime(df_currency['Month'])
 df_currency['month,year']=df_currency['month,year'].apply(lambda x: (x.year,x.month))
 del df_currency['Month']
-
+'''
 # domains
 # titles domain
 titles = list(set(df_sales['Vendor Identifier'].values))
@@ -49,6 +49,7 @@ n_regions = len(countries)
 # currencies domain
 currencies = list(set(df_currency['Customer Currency'].values))
 n_currencies = len(currencies)
+'''
 '''
 # dates domain
 min_date = df_sales['date'].min(axis=1)
@@ -75,11 +76,11 @@ df_sales = pd.merge(df_sales,df_regions,on="Country Code")
 del df_sales['Country Code']
 del df_sales['date']
 del df_regions
-
+'''
 # used regions domain
 regions = list(set(df_sales['Region'].values))
 n_regions = len(regions)
-'''
+
 ### THIS IS UNECCESSARY It breaks cumulative cumulative sum of Recoupable
 # filing empty dates 
 for date in dates:
@@ -89,7 +90,7 @@ for date in dates:
             df_sales = df_sales.append([new_row])
             #df_sales.append({'Vendor Identifier':title,'month,year':date,'Region':region,'Units':0,'Customer Currency':'USD','Royalty Price':0},ignore_index=True)
 '''
-
+'''
 df_encd[u'Mês Início Fiscal'] = pd.to_datetime(df_encd[u'Mês Início Fiscal'])
 
 # NELSON: These warnings don't always make sense. It is possible that a title is sold in only 1 region. But this check tried to make it match all 4 regions.
@@ -100,7 +101,7 @@ for title in titles:
             print "Warning:\n\t We are missing the encoding value for vendor_id: ",title,"in region: ",region,"Rights Holder: "
             new_encoding={'Vendor Identifier':title,'Region':region,u'Comissão':0.0,'Encoding U$':0.0,'Media':0.0,u'Mês Início Fiscal':min_date,'Tax Witholding':0.0,'Rights Holder':''}
             df_encd = df_encd.append([new_encoding])
-
+'''
 ### MERGES
 # getting associated encoding, tax etc per sale
 df_comb = pd.merge(df_sales,df_encd,on=['Vendor Identifier','Region'])
@@ -140,7 +141,7 @@ del df_comb[u'Mês Início Fiscal']
 #del df_comb['Encoding U$']
 '''
 
-# output calculations
+#### ACCRUAL CALCULATIONS ######
 df_comb['Net revenue']=df_comb['Royalty Price']*df_comb['Units']*df_comb['Exchange Rate']
 #df_comb['Tax']=df_comb['Net revenue']*df_comb['Tax Witholding']
 
@@ -161,8 +162,8 @@ columns_accrual = ['month,year','Region','Rights Holder','Vendor Identifier','Pr
 accrual_groupbycols = ['month,year','Vendor Identifier','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
 
 df_accrual_revenue   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Net revenue'].sum()
-print df_accrual_revenue
 df_accrual_royalty   = df_comb[columns_accrual].groupby(accrual_groupbycols)['Royalty'].sum()
+print df_accrual_royalty
 df_accrual_units     = df_comb[columns_accrual].groupby(accrual_groupbycols)['Units'].sum()
 
 
