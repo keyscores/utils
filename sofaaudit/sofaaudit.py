@@ -78,7 +78,7 @@ df_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum()
 df_cumu_royalty = df_comb[columns_accrual].groupby(balance_groupby)['Royalty'].sum().groupby(level=[1,2]).cumsum()
 
 # CUMULATIVE RECOUPABLE Get the cumulative sum of Recoupable
-df_cumu_recoupable = df_comb[columns_accrual].groupby(balance_groupby)['Recoup'].sum()
+df_cumu_recoupable = df_comb[columns_accrual].groupby(balance_groupby)['Recoup'].mean()
 
 #BALANCE - Find the difference/balance of the cumulative royalty and cumulative recoupable
 df_balance = df_cumu_royalty + df_cumu_recoupable
@@ -140,6 +140,6 @@ df_accrual.to_csv(filename_accrual, encoding='utf-8')
 
 
 #### EXPORTING BALANCE REPORT ####
-#df_balance_report = pd.DataFrame([df_cumu_royalty,df_cumu_recoupable,df_balance,df_positive_balance,df_accrual_royalty,df_payment_owed]).transpose()
-#df_balance_report.to_csv(filename_balance, encoding='utf-8')
+df_balance_report = pd.DataFrame([df_cumu_royalty,df_cumu_recoupable,df_balance,df_positive_balance,df_payment_owed]).transpose()
+df_balance_report.to_csv(filename_balance, encoding='utf-8')
 
