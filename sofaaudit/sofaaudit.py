@@ -80,8 +80,10 @@ df_balance['Payment Owed'] = x.fillna(df_balance['Positive'])
 print "Balance Calculated"
 
 #### EXPORTING ACCRUAL REPORT ####
-df_accrual.drop(['Download Date (PST)', 'Tax Witholding', 'Provider', 'Customer Currency', 'Country Code', u'Comissão', 'NOW Tax', 'Exchange Rate', 'Month'],inplace=True,axis=1)
-df_accrual = df_accrual.set_index(['month,year','Vendor Identifier','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor'])
+accrual_groupby = ['month,year','Vendor Identifier','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
+df_accrual.drop(['Download Date (PST)', 'Royalty Price','Tax Witholding', 'Provider', 'Customer Currency', 'Country Code', u'Comissão', 'NOW Tax', 'Exchange Rate', 'Month'],inplace=True,axis=1)
+print df_accrual.groupby(accrual_groupby).sum()
+df_accrual = df_accrual.set_index(accrual_groupby)
 df_accrual.to_csv(filename_accrual, encoding='utf-8')
 
 #### EXPORTING BALANCE REPORT ####
