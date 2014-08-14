@@ -5,11 +5,12 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Apple-Large.xlsx"
-filename_cable="input/Cable.xlsx"
+filename_apple="input/Apple-Complete.xlsx"
+filename_cable="input/Cable-Complete.xlsx"
 filename_lookup="input/Lookup.xlsx"
-filename_balance="output/Balance.csv"
-filename_accrual="output/Accrual.csv"
+filename_balance="output/Balance.xlsx"
+filename_accrual="output/Accrual.xlsx"
+filename_recoupable="output/Recoupable.xlsx"
 
 print 'Loading files....'
 #### IMPORT ####
@@ -85,9 +86,15 @@ accrual_groupby = ['month,year','Vendor Identifier','Region','Rights Holder','Pr
 df_accrual.drop(['Download Date (PST)', 'Royalty Price','Tax Witholding', 'Provider', 'Customer Currency', 'Country Code', u'Comissão', 'NOW Tax', 'Exchange Rate', 'Month'],inplace=True,axis=1)
 df_accrual = df_accrual.groupby(accrual_groupby).sum()
 #df_accrual = df_accrual.set_index(accrual_groupby)
-df_accrual.to_csv(filename_accrual, encoding='utf-8')
+df_accrual.to_excel(filename_accrual, encoding='utf-8',merge_cells=False)
 
 #### EXPORTING BALANCE REPORT ####
-df_balance.to_csv(filename_balance, encoding='utf-8')
+df_balance.to_excel(filename_balance, encoding='utf-8',merge_cells=False)
 print "Done, files exported"
+
+#### EXPORTING RECOUPABLE REPORT ####
+df_recoup = df_recoup[df_recoup['Recoupable'] != 0]
+df_recoup = df_recoup.groupby(['month,year','Vendor Identifier','Rights Holder']).sum()
+df_recoup.to_excel(filename_recoupable, encoding='utf-8',merge_cells=False)
+
 
