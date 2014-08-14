@@ -5,12 +5,13 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Apple.xlsx"
+filename_apple="input/Apple-Large.xlsx"
 filename_cable="input/Cable.xlsx"
 filename_lookup="input/Lookup.xlsx"
 filename_balance="output/Balance.csv"
 filename_accrual="output/Accrual.csv"
 
+print 'Loading files....'
 #### IMPORT ####
 df_sales = pd.read_excel(filename_apple)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
@@ -82,8 +83,8 @@ print "Balance Calculated"
 #### EXPORTING ACCRUAL REPORT ####
 accrual_groupby = ['month,year','Vendor Identifier','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
 df_accrual.drop(['Download Date (PST)', 'Royalty Price','Tax Witholding', 'Provider', 'Customer Currency', 'Country Code', u'Comissão', 'NOW Tax', 'Exchange Rate', 'Month'],inplace=True,axis=1)
-print df_accrual.groupby(accrual_groupby).sum()
-df_accrual = df_accrual.set_index(accrual_groupby)
+df_accrual = df_accrual.groupby(accrual_groupby).sum()
+#df_accrual = df_accrual.set_index(accrual_groupby)
 df_accrual.to_csv(filename_accrual, encoding='utf-8')
 
 #### EXPORTING BALANCE REPORT ####
