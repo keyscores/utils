@@ -5,9 +5,9 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Apple-Complete.xlsx"
+filename_apple="input/Nossa_Vendas_FORECAST_COMPLETE.xlsx"
 filename_cable="input/Cable-Complete.xlsx"
-filename_lookup="input/Lookup.xlsx"
+filename_lookup="input/DeParaSofaDigital.xlsx"
 filename_balance="output/Balance.xlsx"
 filename_accrual="output/Accrual.xlsx"
 filename_recoupable="output/Recoupable.xlsx"
@@ -17,8 +17,8 @@ print 'Loading files....'
 df_sales = pd.read_excel(filename_apple)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 df_sales = df_sales.append(df_cable)
-df_tax  = pd.read_excel(filename_lookup,sheetname="Encoding")[['Vendor Identifier','Region','Titles',u'Comissão','Tax Witholding','NOW Tax','Rights Holder']]
-df_regions = pd.read_excel(filename_lookup,sheetname="Region")
+df_tax  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Titles',u'Comissão','Tax Witholding','NOW Tax','Rights Holder']]
+df_regions = pd.read_excel(filename_lookup,sheetname="Regions")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
 df_recoup  = pd.read_excel(filename_lookup,sheetname="Encoding")[['Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media',u'Mês Início Fiscal']]
 df_recoup.rename(columns={u'Mês Início Fiscal':'month,year'}, inplace=True)
