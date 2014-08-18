@@ -5,8 +5,8 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Nossa_Vendas_FORECAST_COMPLETE.xlsx"
-filename_cable="input/Cable-Complete.xlsx"
+filename_apple="input/Apple-Small.xlsx"
+filename_cable="input/Cable-Small.xlsx"
 filename_lookup="input/DeParaSofaDigital.xlsx"
 filename_balance="output/Balance.xlsx"
 filename_accrual="output/Accrual.xlsx"
@@ -20,8 +20,11 @@ df_sales = df_sales.append(df_cable)
 df_tax  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Titles',u'Comissão','Tax Witholding','NOW Tax','Rights Holder']]
 df_regions = pd.read_excel(filename_lookup,sheetname="Regions")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
-df_recoup  = pd.read_excel(filename_lookup,sheetname="Encoding")[['Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media',u'Mês Início Fiscal']]
+df_recoup  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media',u'Mês Início Fiscal']]
 df_recoup.rename(columns={u'Mês Início Fiscal':'month,year'}, inplace=True)
+#df_recoup['Media']=df_recoup['Media'].convert_objects(convert_numeric=True)
+#df_recoup['Encoding U$']=df_recoup['Encoding U$'].convert_objects(convert_numeric=True)
+
 print 'Imported'
 
 #### Clean  ####
@@ -59,7 +62,7 @@ print "Accrual Calculated"
 
 ####  BALANCE CALCULATIONS ####
 balance_groupby = ['month,year','Titles','Rights Holder']
-df_recoup['Recoupable'] = df_recoup['Encoding U$'] + df_recoup['Media'] 
+df_recoup['Recoupable'] = df_recoup['Encoding U$'] + df_recoup['Media']
 
 # creating a new dataframe from the series. This could be simpler. Some cargo cult happening here.
 s_accrual_royalty2 = df_accrual.groupby(balance_groupby)['Royalty'].sum()
@@ -90,11 +93,11 @@ df_accrual.to_excel(filename_accrual, encoding='utf-8',merge_cells=False)
 
 #### EXPORTING BALANCE REPORT ####
 df_balance.to_excel(filename_balance, encoding='utf-8',merge_cells=False)
-print "Done, files exported"
+
 
 #### EXPORTING RECOUPABLE REPORT ####
 df_recoup = df_recoup[df_recoup['Recoupable'] != 0]
 df_recoup = df_recoup.groupby(['month,year','Titles','Rights Holder']).sum()
 df_recoup.to_excel(filename_recoupable, encoding='utf-8',merge_cells=False)
-
+print "Done, files exported"
 
