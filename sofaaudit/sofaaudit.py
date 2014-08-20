@@ -5,8 +5,9 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Nossa_Vendas_FORECAST_COMPLETE.xlsx"
-filename_cable="input/Cable-Complete.xlsx"
+filename_apple="input/Apple-Small.xlsx"
+filename_cable="input/Cable-Small.xlsx"
+filename_google="input/Google-Small.csv"
 filename_lookup="input/DeParaSofaDigital.xlsx"
 filename_balance="output/Balance.xlsx"
 filename_accrual="output/Accrual.xlsx"
@@ -22,8 +23,26 @@ df_regions = pd.read_excel(filename_lookup,sheetname="Regions")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
 df_recoup  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media',u'Mês Início Fiscal']]
 df_recoup.rename(columns={u'Mês Início Fiscal':'month,year'}, inplace=True)
+#if there are excel formulas in the columns that need to be ignored
 #df_recoup['Media']=df_recoup['Media'].convert_objects(convert_numeric=True)
 #df_recoup['Encoding U$']=df_recoup['Encoding U$'].convert_objects(convert_numeric=True)
+
+#add google
+df_google = pd.read_csv(filename_google,parse_dates=[1])[['Partner Reporting ID','Resolution', 'Transaction Type', 'Transaction Date', 'Country', 'Purchase Location', 'Native Final Partner Earnings (BRL)']]
+df_google = df_google.rename(columns={'Partner Reporting ID': 'Vendor Identifier','Resolution': 'Asset/Content Flavor','Transaction Type': 'Product Type Identifier','Country': 'Country Code','Purchase Location':'Provider','Native Final Partner Earnings (BRL)':'Royalty Price','Transaction Date':'Download Date (PST)'})
+
+# google has no column units, must assume each row equals 1
+df_google['Units']="1"
+df_google['Units'] = df_google['Units'].astype('float64')
+#doesn't have a currency column needs to add it.
+df_google['Customer Currency']="USD"
+df_google['Product Type Identifier']=df_google['Product Type Identifier'].map({'VOD':'D','EST':'M'})
+
+#add google to the sales dataframe
+df_sales = df_sales.append(df_google)
+
+print df_sales
+
 
 print 'Imported'
 
@@ -36,6 +55,7 @@ def first_day_of_month_converter(dt):
     return datetime.datetime(dt.year, dt.month, 1)
 df_sales['month,year'] = df_sales['Download Date (PST)'].apply(first_day_of_month_converter)
 df_recoup['month,year'] = df_recoup['month,year'].apply(first_day_of_month_converter)
+df_google['month,year'] = df_google['Download Date (PST)'].apply(first_day_of_month_converter)
 df_currency['month,year']=pd.to_datetime(df_currency['Month'])
 print "Cleaned"
 
@@ -47,6 +67,7 @@ df_accrual = pd.merge(df_sales,df_tax,on=['Vendor Identifier','Region'])
 # Merge associated currency per sale, valid on the sale date
 df_accrual = pd.merge(df_accrual,df_currency,on=['Customer Currency','month,year'])
 print "Merged"
+df_sales.to_excel("test.xlsx", encoding='utf-8',merge_cells=False)
 
 #### ACCRUAL CALCULATIONS ######
 df_accrual['Net revenue']=df_accrual['Royalty Price']*df_accrual['Units']*df_accrual['Exchange Rate']
