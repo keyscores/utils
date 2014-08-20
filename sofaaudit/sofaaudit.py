@@ -5,8 +5,8 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Apple-Small.xlsx"
-filename_cable="input/Cable-Small.xlsx"
+filename_apple="input/Nossa_Vendas_FORECAST_COMPLETE.xlsx"
+filename_cable="input/Cable-Complete.xlsx"
 filename_google="input/Google-Small.csv"
 filename_lookup="input/DeParaSofaDigital.xlsx"
 filename_balance="output/Balance.xlsx"
