@@ -41,9 +41,6 @@ df_google['Product Type Identifier']=df_google['Product Type Identifier'].map({'
 #add google to the sales dataframe
 df_sales = df_sales.append(df_google)
 
-print df_sales
-
-
 print 'Imported'
 
 #### Clean  ####
@@ -72,7 +69,8 @@ df_sales.to_excel("test.xlsx", encoding='utf-8',merge_cells=False)
 #### ACCRUAL CALCULATIONS ######
 df_accrual['Net revenue']=df_accrual['Royalty Price']*df_accrual['Units']*df_accrual['Exchange Rate']
 # TAX The tax has a special rule. Where sales.provider=='Apple' the Value multuplied is 'Tax Witholding', if it is provider == 'Net Now' then it is encoding.Now_Tax
-apple_provider = df_accrual['Provider'] == 'APPLE'
+#should be: "if matches apple or google" <> 'Net Now' is cheating
+apple_provider = df_accrual['Provider'] <> 'NET NOW'
 net_now_provider = df_accrual['Provider'] == 'NET NOW'
 df_accrual['Tax'] = (df_accrual['Net revenue'] * df_accrual['Tax Witholding']).where(apple_provider)
 df_accrual['Tax'] = (df_accrual['Net revenue'] * df_accrual['NOW Tax']).where(net_now_provider, other=df_accrual['Tax'])
