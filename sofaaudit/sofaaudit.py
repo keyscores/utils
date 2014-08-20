@@ -64,7 +64,6 @@ df_accrual = pd.merge(df_sales,df_tax,on=['Vendor Identifier','Region'])
 # Merge associated currency per sale, valid on the sale date
 df_accrual = pd.merge(df_accrual,df_currency,on=['Customer Currency','month,year'])
 print "Merged"
-df_sales.to_excel("test.xlsx", encoding='utf-8',merge_cells=False)
 
 #### ACCRUAL CALCULATIONS ######
 df_accrual['Net revenue']=df_accrual['Royalty Price']*df_accrual['Units']*df_accrual['Exchange Rate']
