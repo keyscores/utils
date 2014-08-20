@@ -27,6 +27,7 @@ df_recoup.rename(columns={u'Mês Início Fiscal':'month,year'}, inplace=True)
 #df_recoup['Media']=df_recoup['Media'].convert_objects(convert_numeric=True)
 #df_recoup['Encoding U$']=df_recoup['Encoding U$'].convert_objects(convert_numeric=True)
 
+'''
 #add google
 df_google = pd.read_csv(filename_google,parse_dates=[1])[['Partner Reporting ID','Resolution', 'Transaction Type', 'Transaction Date', 'Country', 'Purchase Location', 'Native Final Partner Earnings (BRL)']]
 df_google = df_google.rename(columns={'Partner Reporting ID': 'Vendor Identifier','Resolution': 'Asset/Content Flavor','Transaction Type': 'Product Type Identifier','Country': 'Country Code','Purchase Location':'Provider','Native Final Partner Earnings (BRL)':'Royalty Price','Transaction Date':'Download Date (PST)'})
@@ -40,6 +41,7 @@ df_google['Product Type Identifier']=df_google['Product Type Identifier'].map({'
 
 #add google to the sales dataframe
 df_sales = df_sales.append(df_google)
+'''
 
 print 'Imported'
 
@@ -52,7 +54,11 @@ def first_day_of_month_converter(dt):
     return datetime.datetime(dt.year, dt.month, 1)
 df_sales['month,year'] = df_sales['Download Date (PST)'].apply(first_day_of_month_converter)
 df_recoup['month,year'] = df_recoup['month,year'].apply(first_day_of_month_converter)
+
+'''#uncomment to enable 
 df_google['month,year'] = df_google['Download Date (PST)'].apply(first_day_of_month_converter)
+'''
+
 df_currency['month,year']=pd.to_datetime(df_currency['Month'])
 print "Cleaned"
 
