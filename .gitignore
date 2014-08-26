@@ -1,5 +1,7 @@
 #outputs
 .DS_Store
+input/Apple-Complete*
+input/Cable-Complete*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

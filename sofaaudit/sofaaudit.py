@@ -5,9 +5,9 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Nossa_Vendas_FORECAST_COMPLETE.xlsx"
-filename_cable="input/Cable-Complete.xlsx"
-filename_google="input/Google-Small.csv"
+filename_apple="input/Apple-Small.xlsx"
+filename_cable="input/Cable-Small.xlsx"
+filename_google="input/Import_transactional_Google.xlsx"
 filename_lookup="input/DeParaSofaDigital.xlsx"
 filename_balance="output/Balance.xlsx"
 filename_accrual="output/Accrual.xlsx"
@@ -27,10 +27,10 @@ df_recoup.rename(columns={u'Mês Início Fiscal':'month,year'}, inplace=True)
 #df_recoup['Media']=df_recoup['Media'].convert_objects(convert_numeric=True)
 #df_recoup['Encoding U$']=df_recoup['Encoding U$'].convert_objects(convert_numeric=True)
 
-'''
+
 #add google
-df_google = pd.read_csv(filename_google,parse_dates=[1])[['Partner Reporting ID','Resolution', 'Transaction Type', 'Transaction Date', 'Country', 'Purchase Location', 'Native Final Partner Earnings (BRL)']]
-df_google = df_google.rename(columns={'Partner Reporting ID': 'Vendor Identifier','Resolution': 'Asset/Content Flavor','Transaction Type': 'Product Type Identifier','Country': 'Country Code','Purchase Location':'Provider','Native Final Partner Earnings (BRL)':'Royalty Price','Transaction Date':'Download Date (PST)'})
+df_google = pd.read_excel(filename_google)[['Vendor UPC','Resolution', 'Transaction Type', 'Transaction Date', 'Country', 'Purchase Location', 'Final Partner Earnings (USD)']]
+df_google = df_google.rename(columns={'Vendor UPC': 'Vendor Identifier','Resolution': 'Asset/Content Flavor','Transaction Type': 'Product Type Identifier','Country': 'Country Code','Purchase Location':'Provider','Final Partner Earnings (USD)':'Royalty Price','Transaction Date':'Download Date (PST)'})
 
 # google has no column units, must assume each row equals 1
 df_google['Units']="1"
@@ -41,7 +41,7 @@ df_google['Product Type Identifier']=df_google['Product Type Identifier'].map({'
 
 #add google to the sales dataframe
 df_sales = df_sales.append(df_google)
-'''
+
 
 print 'Imported'
 
