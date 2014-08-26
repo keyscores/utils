@@ -29,9 +29,8 @@ df_recoup.rename(columns={u'Mês Início Fiscal':'month,year'}, inplace=True)
 
 
 #add google
-df_google = pd.read_excel(filename_google)[['Vendor UPC','Resolution', 'Transaction Type', 'Transaction Date', 'Country', 'Purchase Location', 'Final Partner Earnings (USD)']]
+df_google = pd.read_excel(filename_google)[['Vendor UPC','Resolution','Purchase Location', 'Transaction Type', 'Transaction Date', 'Country','Final Partner Earnings (USD)']]
 df_google = df_google.rename(columns={'Vendor UPC': 'Vendor Identifier','Resolution': 'Asset/Content Flavor','Transaction Type': 'Product Type Identifier','Country': 'Country Code','Purchase Location':'Provider','Final Partner Earnings (USD)':'Royalty Price','Transaction Date':'Download Date (PST)'})
-
 # google has no column units, must assume each row equals 1
 df_google['Units']="1"
 df_google['Units'] = df_google['Units'].astype('float64')
@@ -41,7 +40,6 @@ df_google['Product Type Identifier']=df_google['Product Type Identifier'].map({'
 
 #add google to the sales dataframe
 df_sales = df_sales.append(df_google)
-
 
 print 'Imported'
 
@@ -109,8 +107,8 @@ df_balance['Payment Owed'] = x.fillna(df_balance['Positive'])
 print "Balance Calculated"
 
 #### EXPORTING ACCRUAL REPORT ####
-accrual_groupby = ['month,year','Titles','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
-df_accrual.drop(['Download Date (PST)', 'Royalty Price','Tax Witholding', 'Provider', 'Customer Currency', 'Country Code', u'Comissão', 'NOW Tax', 'Exchange Rate', 'Month','Vendor Identifier'],inplace=True,axis=1)
+accrual_groupby = ['month,year', 'Provider','Titles','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
+df_accrual.drop(['Download Date (PST)', 'Royalty Price','Tax Witholding','Customer Currency', 'Country Code', u'Comissão', 'NOW Tax', 'Exchange Rate', 'Month','Vendor Identifier'],inplace=True,axis=1)
 df_accrual = df_accrual.groupby(accrual_groupby).sum()
 #df_accrual = df_accrual.set_index(accrual_groupby)
 df_accrual.to_excel(filename_accrual, encoding='utf-8',merge_cells=False)
