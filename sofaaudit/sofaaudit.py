@@ -5,8 +5,8 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Apple-Small.xlsx"
-filename_cable="input/Cable-Small.xlsx"
+filename_apple="input/Nossa_Vendas_FORECAST_COMPLETE.xlsx"
+filename_cable="input/Cable-Complete.xlsx"
 filename_google="input/Import_transactional_Google.xlsx"
 filename_lookup="input/DeParaSofaDigital.xlsx"
 filename_balance="output/Balance.xlsx"
@@ -15,22 +15,18 @@ filename_recoupable="output/Recoupable.xlsx"
 
 print 'Loading files....'
 #### IMPORT ####
-df_sales = pd.read_excel(filename_apple)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
-df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
-df_sales = df_sales.append(df_cable)
+df_sales = pd.read_excel(filename_apple)[['Vendor Identifier','Units','Customer Price','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','CUSTOMER PRICE','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+df_cable.rename(columns={'CUSTOMER PRICE':'Customer Price'}, inplace=True)
 df_tax  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Titles',u'Comissão','Tax Witholding','NOW Tax','Rights Holder']]
 df_regions = pd.read_excel(filename_lookup,sheetname="Regions")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
 df_recoup  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media',u'Mês Início Fiscal']]
 df_recoup.rename(columns={u'Mês Início Fiscal':'month,year'}, inplace=True)
-#if there are excel formulas in the columns that need to be ignored
-#df_recoup['Media']=df_recoup['Media'].convert_objects(convert_numeric=True)
-#df_recoup['Encoding U$']=df_recoup['Encoding U$'].convert_objects(convert_numeric=True)
-
 
 #add google
-df_google = pd.read_excel(filename_google)[['Vendor UPC','Resolution','Purchase Location', 'Transaction Type', 'Transaction Date', 'Country','Final Partner Earnings (USD)']]
-df_google = df_google.rename(columns={'Vendor UPC': 'Vendor Identifier','Resolution': 'Asset/Content Flavor','Transaction Type': 'Product Type Identifier','Country': 'Country Code','Purchase Location':'Provider','Final Partner Earnings (USD)':'Royalty Price','Transaction Date':'Download Date (PST)'})
+df_google = pd.read_excel(filename_google)[['Vendor UPC','Resolution','Retail Price (USD)','Purchase Location', 'Transaction Type', 'Transaction Date', 'Country','Final Partner Earnings (USD)']]
+df_google = df_google.rename(columns={'Vendor UPC': 'Vendor Identifier','Retail Price (USD)':'Customer Price','Resolution': 'Asset/Content Flavor','Transaction Type': 'Product Type Identifier','Country': 'Country Code','Purchase Location':'Provider','Final Partner Earnings (USD)':'Royalty Price','Transaction Date':'Download Date (PST)'})
 # google has no column units, must assume each row equals 1
 df_google['Units']="1"
 df_google['Units'] = df_google['Units'].astype('float64')
@@ -39,6 +35,7 @@ df_google['Customer Currency']="USD"
 df_google['Product Type Identifier']=df_google['Product Type Identifier'].map({'VOD':'D','EST':'M'})
 
 #add google to the sales dataframe
+df_sales = df_sales.append(df_cable)
 df_sales = df_sales.append(df_google)
 
 print 'Imported'
@@ -52,6 +49,10 @@ def first_day_of_month_converter(dt):
     return datetime.datetime(dt.year, dt.month, 1)
 df_sales['month,year'] = df_sales['Download Date (PST)'].apply(first_day_of_month_converter)
 df_recoup['month,year'] = df_recoup['month,year'].apply(first_day_of_month_converter)
+#if there are excel formulas in the columns that need to be ignored
+#df_recoup['Media']=df_recoup['Media'].convert_objects(convert_numeric=True)
+#df_recoup['Encoding U$']=df_recoup['Encoding U$'].convert_objects(convert_numeric=True)
+
 
 '''#uncomment to enable 
 df_google['month,year'] = df_google['Download Date (PST)'].apply(first_day_of_month_converter)
@@ -70,6 +71,7 @@ df_accrual = pd.merge(df_accrual,df_currency,on=['Customer Currency','month,year
 print "Merged"
 
 #### ACCRUAL CALCULATIONS ######
+df_accrual['Customer Gross']=df_accrual['Customer Price']*df_accrual['Units']*df_accrual['Exchange Rate']
 df_accrual['Net revenue']=df_accrual['Royalty Price']*df_accrual['Units']*df_accrual['Exchange Rate']
 # TAX The tax has a special rule. Where sales.provider=='Apple' the Value multuplied is 'Tax Witholding', if it is provider == 'Net Now' then it is encoding.Now_Tax
 #should be: "if matches apple or google" <> 'Net Now' is cheating
@@ -107,8 +109,8 @@ df_balance['Payment Owed'] = x.fillna(df_balance['Positive'])
 print "Balance Calculated"
 
 #### EXPORTING ACCRUAL REPORT ####
-accrual_groupby = ['month,year', 'Provider','Titles','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
-df_accrual.drop(['Download Date (PST)', 'Royalty Price','Tax Witholding','Customer Currency', 'Country Code', u'Comissão', 'NOW Tax', 'Exchange Rate', 'Month','Vendor Identifier'],inplace=True,axis=1)
+accrual_groupby = ['month,year', 'Country Code','Provider','Titles','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
+df_accrual.drop(['Download Date (PST)', 'Royalty Price','Tax Witholding','Customer Currency','Customer Price', u'Comissão', 'NOW Tax', 'Exchange Rate', 'Month','Vendor Identifier'],inplace=True,axis=1)
 df_accrual = df_accrual.groupby(accrual_groupby).sum()
 #df_accrual = df_accrual.set_index(accrual_groupby)
 df_accrual.to_excel(filename_accrual, encoding='utf-8',merge_cells=False)
