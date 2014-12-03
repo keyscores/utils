@@ -21,7 +21,7 @@ df_cable.rename(columns={'CUSTOMER PRICE':'Customer Price'}, inplace=True)
 df_tax  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Titles',u'Comissão','Tax Witholding','NOW Tax','Rights Holder']]
 df_regions = pd.read_excel(filename_lookup,sheetname="Regions")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
-df_recoup  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media',u'Mês Início Fiscal']]
+df_recoup  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media U$',u'Mês Início Fiscal']]
 df_recoup.rename(columns={u'Mês Início Fiscal':'month,year'}, inplace=True)
 
 #add google
@@ -63,7 +63,11 @@ print "Cleaned"
 
 #### MERGE ####
 # Merge region from country by merging with regions sheet
-df_sales = pd.merge(df_sales,df_regions,on="Country Code")                
+df_sales = pd.merge(df_sales,df_regions,on="Country Code")     
+
+#TODO merge sales with valid time ranges
+
+
 # Merge sales with encoding data, encoding, tax etc per sale
 df_accrual = pd.merge(df_sales,df_tax,on=['Vendor Identifier','Region'])
 # Merge associated currency per sale, valid on the sale date
@@ -86,7 +90,7 @@ print "Accrual Calculated"
 
 ####  BALANCE CALCULATIONS ####
 balance_groupby = ['month,year','Titles','Rights Holder']
-df_recoup['Recoupable'] = df_recoup['Encoding U$'] + df_recoup['Media']
+df_recoup['Recoupable'] = df_recoup['Encoding U$'] + df_recoup['Media U$']
 
 # creating a new dataframe from the series. This could be simpler. Some cargo cult happening here.
 s_accrual_royalty2 = df_accrual.groupby(balance_groupby)['Royalty'].sum()
