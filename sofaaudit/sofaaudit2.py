@@ -18,7 +18,7 @@ print 'Loading files....'
 df_sales = pd.read_excel(filename_apple)[['Vendor Identifier','Units','Customer Price','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','CUSTOMER PRICE','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 df_cable.rename(columns={'CUSTOMER PRICE':'Customer Price'}, inplace=True)
-df_tax  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Titles',u'Comissão','Tax Witholding','NOW Tax','Rights Holder']]
+df_tax  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Titles',u'Comissão','Tax Witholding','NOW Tax']]
 df_regions = pd.read_excel(filename_lookup,sheetname="Regions")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
 df_recoup  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media U$',u'Mês Início Fiscal']]
@@ -55,10 +55,10 @@ df_recoup['Month'] = df_recoup['Month'].apply(first_day_of_month_converter)
 
 
 '''#uncomment to enable 
-df_google['month,year'] = df_google['Download Date (PST)'].apply(first_day_of_month_converter)
+df_google['Month'] = df_google['Download Date (PST)'].apply(first_day_of_month_converter)
 '''
 
-df_currency['month,year']=pd.to_datetime(df_currency['Month'])
+df_currency['Month']=pd.to_datetime(df_currency['Month'])
 print "Cleaned"
 
 ### FIND DATE RANGES ####
@@ -88,19 +88,20 @@ df_sales = pd.merge(df_sales,df_regions,on="Country Code")
 #TODO merge sales with valid time ranges
 #df_range = pd.read_excel("out.xlsx")
 #df_range['Month'] = df_range['Month'].apply(first_day_of_month_converter)
-test_merge = pd.merge(df_ranges,df_sales,on=['Vendor Identifier','Region','Month'])
+df_accrual = pd.merge(df_ranges,df_sales,on=['Vendor Identifier','Region','Month'])
 
-test_merge.to_excel('test.xlsx')
 
-print test_merge
 
-'''
+
+
 # Merge sales with encoding data, encoding, tax etc per sale
-df_accrual = pd.merge(df_sales,df_tax,on=['Vendor Identifier','Region'])
+df_accrual = pd.merge(df_accrual,df_tax,on=['Vendor Identifier','Region'])
+
+df_accrual.to_excel('test.xlsx')
 
 
 # Merge associated currency per sale, valid on the sale date
-df_accrual = pd.merge(df_accrual,df_currency,on=['Customer Currency','month,year'])
+df_accrual = pd.merge(df_accrual,df_currency,on=['Customer Currency','Month'])
 print "Merged"
 
 #### ACCRUAL CALCULATIONS ######
@@ -118,7 +119,7 @@ df_accrual['Royalty']=df_accrual['After tax']-df_accrual['Fee value']
 print "Accrual Calculated"
 
 ####  BALANCE CALCULATIONS ####
-balance_groupby = ['month,year','Titles','Rights Holder']
+balance_groupby = ['Month','Titles','Rights Holder']
 df_recoup['Recoupable'] = df_recoup['Encoding U$'] + df_recoup['Media U$']
 
 # creating a new dataframe from the series. This could be simpler. Some cargo cult happening here.
@@ -133,7 +134,7 @@ df_balance = df_balance.merge(df_recoupable, on = [u'Titles', u'Rights Holder'])
 
 # do the calcs
 # it needs to be multiindex so that cumsum works properly
-df_balance = df_balance.set_index(['month,year','Titles','Rights Holder'])
+df_balance = df_balance.set_index(['Month','Titles','Rights Holder'])
 df_balance['Cumu'] = df_balance['Royalty'].groupby(level=[1,2]).cumsum()
 df_balance['Balance'] = df_balance['Recoupable'] + df_balance['Cumu']
 df_balance['Positive'] = df_balance['Balance'].mask(df_balance['Balance']<0).fillna(0)
@@ -142,8 +143,8 @@ df_balance['Payment Owed'] = x.fillna(df_balance['Positive'])
 print "Balance Calculated"
 
 #### EXPORTING ACCRUAL REPORT ####
-accrual_groupby = ['month,year','Provider','Country Code', 'Titles','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
-df_accrual.drop(['Download Date (PST)', 'Royalty Price','Tax Witholding','Customer Currency','Customer Price', u'Comissão', 'NOW Tax', 'Exchange Rate', 'Month','Vendor Identifier'],inplace=True,axis=1)
+accrual_groupby = ['Month','Provider','Country Code', 'Titles','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
+df_accrual.drop(['Download Date (PST)', 'Royalty Price','Tax Witholding','Customer Currency','Customer Price', u'Comissão', 'NOW Tax', 'Exchange Rate','Vendor Identifier'],inplace=True,axis=1)
 df_accrual = df_accrual.groupby(accrual_groupby).sum()
 #df_accrual = df_accrual.set_index(accrual_groupby)
 df_accrual.to_excel(filename_accrual, encoding='utf-8',merge_cells=False)
@@ -154,7 +155,6 @@ df_balance.to_excel(filename_balance, encoding='utf-8',merge_cells=False)
 
 #### EXPORTING RECOUPABLE REPORT ####
 df_recoup = df_recoup[df_recoup['Recoupable'] != 0]
-df_recoup = df_recoup.groupby(['month,year','Titles','Rights Holder']).sum()
+df_recoup = df_recoup.groupby(['Month','Titles','Rights Holder']).sum()
 df_recoup.to_excel(filename_recoupable, encoding='utf-8',merge_cells=False)
 print "Done, files exported"
-'''
