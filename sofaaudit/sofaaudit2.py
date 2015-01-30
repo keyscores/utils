@@ -8,7 +8,7 @@ import numpy as np
 filename_apple="input/Apple-Small.xlsx"
 filename_cable="input/Cable-Small.xlsx"
 filename_google="input/Google-Small.xlsx"
-filename_lookup="input/DeParaSofaDigital.xlsx"
+filename_lookup="input/lookup.xlsx"
 filename_balance="output/Balance.xlsx"
 filename_accrual="output/Accrual.xlsx"
 filename_recoupable="output/Recoupable.xlsx"
@@ -80,6 +80,8 @@ df_ranges = df_ranges.drop(['Vendor Identifier','Region','Rights Holder','variab
 df_ranges = df_ranges.reset_index()
 #print df_ranges
 
+df_ranges.to_excel('test.xlsx')
+
 print "Date Range Matched"
 #### MERGE ####
 # Merge region from country by merging with regions sheet
@@ -97,12 +99,13 @@ df_accrual = pd.merge(df_ranges,df_sales,on=['Vendor Identifier','Region','Month
 # Merge sales with encoding data, encoding, tax etc per sale
 df_accrual = pd.merge(df_accrual,df_tax,on=['Vendor Identifier','Region'])
 
-df_accrual.to_excel('test.xlsx')
+#df_accrual.to_excel('test.xlsx')
 
 
 # Merge associated currency per sale, valid on the sale date
 df_accrual = pd.merge(df_accrual,df_currency,on=['Customer Currency','Month'])
 print "Merged"
+
 
 #### ACCRUAL CALCULATIONS ######
 df_accrual['Customer Gross']=df_accrual['Customer Price']*df_accrual['Units']*df_accrual['Exchange Rate']
@@ -156,5 +159,6 @@ df_balance.to_excel(filename_balance, encoding='utf-8',merge_cells=False)
 #### EXPORTING RECOUPABLE REPORT ####
 df_recoup = df_recoup[df_recoup['Recoupable'] != 0]
 df_recoup = df_recoup.groupby(['Month','Titles','Rights Holder']).sum()
-df_recoup.to_excel(filename_recoupable, encoding='utf-8',merge_cells=False)
+print df_recoup
+#df_recoup.to_excel(filename_recoupable, encoding='utf-8',merge_cells=False)
 print "Done, files exported"
