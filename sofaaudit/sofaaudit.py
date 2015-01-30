@@ -12,20 +12,25 @@ filename_lookup="input/DeParaSofaDigital.xlsx"
 filename_balance="output/Balance.xlsx"
 filename_accrual="output/Accrual.xlsx"
 filename_recoupable="output/Recoupable.xlsx"
+filename_nometadata="Output/nometadata.xlsx"
+filename_nosales="Output/nosales.xlsx"
 
 print 'Loading files....'
 #### IMPORT ####
 df_sales = pd.read_excel(filename_apple)[['Vendor Identifier','Units','Customer Price','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+print "...Apple Loaded"
 df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','CUSTOMER PRICE','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+print "...Cable Loaded"
 df_cable.rename(columns={'CUSTOMER PRICE':'Customer Price'}, inplace=True)
 df_tax  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Titles',u'Comissão','Tax Witholding','NOW Tax','Rights Holder']]
 df_regions = pd.read_excel(filename_lookup,sheetname="Regions")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
 df_recoup  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media U$',u'Mês Início Fiscal']]
 df_recoup.rename(columns={u'Mês Início Fiscal':'month,year'}, inplace=True)
-
+print "...lookup tables loaded"
 #add google
 df_google = pd.read_excel(filename_google)[['Vendor UPC','Resolution','Retail Price (USD)','Purchase Location', 'Transaction Type', 'Transaction Date', 'Country','Final Partner Earnings (USD)']]
+print "...Google Loaded"
 df_google = df_google.rename(columns={'Vendor UPC': 'Vendor Identifier','Retail Price (USD)':'Customer Price','Resolution': 'Asset/Content Flavor','Transaction Type': 'Product Type Identifier','Country': 'Country Code','Purchase Location':'Provider','Final Partner Earnings (USD)':'Royalty Price','Transaction Date':'Download Date (PST)'})
 # google has no column units, must assume each row equals 1
 df_google['Units']="1"
@@ -33,12 +38,13 @@ df_google['Units'] = df_google['Units'].astype('float64')
 #doesn't have a currency column needs to add it.
 df_google['Customer Currency']="USD"
 df_google['Product Type Identifier']=df_google['Product Type Identifier'].map({'VOD':'D','EST':'M'})
+print 'Loaded'
 
-#add google to the sales dataframe
+#add cable and google to the sales dataframe
 df_sales = df_sales.append(df_cable)
 df_sales = df_sales.append(df_google)
 
-print 'Imported'
+print 'Appended'
 
 #### Clean  ####
 # remove unneeded data
@@ -59,7 +65,28 @@ df_google['month,year'] = df_google['Download Date (PST)'].apply(first_day_of_mo
 '''
 
 df_currency['month,year']=pd.to_datetime(df_currency['Month'])
+
+
+
 print "Cleaned"
+
+
+### AUDIT ###
+#THAT ALL THE VENDOR IDs in sales are in the DePara File
+df_sales.to_excel("Output/AuditSales.xlsx")
+
+checksales = df_sales['Vendor Identifier']
+checklookup = df_tax['Vendor Identifier']
+#produce a list of what titles had transactions but no metadata in lookup
+nometadata = checksales[~checksales.isin(checklookup)]
+nometadata.to_frame(name='column_name').to_excel(filename_nometadata)
+
+
+#produce a list of what titles never had transactions
+nosales = checklookup[~checklookup.isin(checksales)]
+nosales.to_frame(name='column_name').to_excel(filename_nosales)
+
+print "Audit"
 
 #### MERGE ####
 # Merge region from country by merging with regions sheet
@@ -72,6 +99,7 @@ df_sales = pd.merge(df_sales,df_regions,on="Country Code")
 df_accrual = pd.merge(df_sales,df_tax,on=['Vendor Identifier','Region'])
 # Merge associated currency per sale, valid on the sale date
 df_accrual = pd.merge(df_accrual,df_currency,on=['Customer Currency','month,year'])
+
 print "Merged"
 
 #### ACCRUAL CALCULATIONS ######
@@ -128,4 +156,3 @@ df_recoup = df_recoup[df_recoup['Recoupable'] != 0]
 df_recoup = df_recoup.groupby(['month,year','Titles','Rights Holder']).sum()
 df_recoup.to_excel(filename_recoupable, encoding='utf-8',merge_cells=False)
 print "Done, files exported"
-
