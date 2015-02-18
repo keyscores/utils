@@ -25,8 +25,8 @@ df_cable.rename(columns={'CUSTOMER PRICE':'Customer Price'}, inplace=True)
 df_tax  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Titles',u'Comissão','Tax Witholding','NOW Tax','Rights Holder']]
 df_regions = pd.read_excel(filename_lookup,sheetname="Regions")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
-df_recoup  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media U$',u'Mês Início Fiscal']]
-df_recoup.rename(columns={u'Mês Início Fiscal':'month,year'}, inplace=True)
+df_recoup  = pd.read_excel("input/DeParaSofaDigital.xlsx",sheetname="Recoupable")[['Date','Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media U$']]
+df_recoup.rename(columns={u'Date':'month,year'}, inplace=True)
 print "...lookup tables loaded"
 #add google
 df_google = pd.read_excel(filename_google)[['Vendor UPC','Resolution','Retail Price (USD)','Purchase Location', 'Transaction Type', 'Transaction Date', 'Country','Final Partner Earnings (USD)']]
@@ -143,9 +143,10 @@ df_accrual['Royalty']=df_accrual['After tax']-df_accrual['Fee value']
 print "Accrual Calculated"
 
 ####  BALANCE CALCULATIONS ####
-balance_groupby = ['month,year','Titles','Rights Holder']
+#alternate recoupable
 df_recoup['Recoupable'] = df_recoup['Encoding U$'] + df_recoup['Media U$']
 
+balance_groupby = ['month,year','Titles','Rights Holder']
 # creating a new dataframe from the series. This could be simpler. Some cargo cult happening here.
 s_accrual_royalty2 = df_accrual.groupby(balance_groupby)['Royalty'].sum()
 s_recoupable = df_recoup.groupby(balance_groupby)['Recoupable'].sum()
