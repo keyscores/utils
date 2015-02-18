@@ -5,10 +5,10 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Nossa_Vendas_FORECAST_COMPLETE.xlsx"
-filename_cable="input/Cable-Complete.xlsx"
-filename_google="input/Import_transactional_Google.xlsx"
-filename_lookup="input/DeParaSofaDigital.xlsx"
+filename_apple="input/apple.xlsx"
+filename_cable="input/cable.xlsx"
+filename_google="input/google.xlsx"
+filename_lookup="input/lookup.xlsx"
 filename_balance="output/Balance.xlsx"
 filename_accrual="output/Accrual.xlsx"
 filename_recoupable="output/Recoupable.xlsx"
@@ -88,6 +88,31 @@ nosales.to_frame(name='column_name').to_excel(filename_nosales)
 
 print "Audit"
 
+'''Uncomment when date ranges are effective
+### FIND DATE RANGES ####
+df_ranges = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Rights Holder','Start Date','End Date']]
+
+#pivot the values into position using melt
+df_ranges = pd.melt(df_ranges, id_vars=['Vendor Identifier', 'Region','Rights Holder'], value_name='Month')
+
+#needs to be a datetime index to be able to resample below
+df_ranges = df_ranges.set_index('Month')
+
+#a function to resample an index
+f = lambda df_ranges: df_ranges.resample(rule='MS', how='first')
+# apply the resample rule to each groupby level
+df_ranges = df_ranges.groupby(['Vendor Identifier','Region','Rights Holder']).apply(f)
+
+# format the output, and drop unnecessary columns
+df_ranges = df_ranges.drop(['Vendor Identifier','Region','Rights Holder','variable'], axis=1)
+df_ranges = df_ranges.reset_index()
+#print df_ranges
+
+df_ranges.to_excel('test.xlsx')
+
+print "Date Range Matched"
+'''
+
 #### MERGE ####
 # Merge region from country by merging with regions sheet
 df_sales = pd.merge(df_sales,df_regions,on="Country Code")     
@@ -99,6 +124,7 @@ df_sales = pd.merge(df_sales,df_regions,on="Country Code")
 df_accrual = pd.merge(df_sales,df_tax,on=['Vendor Identifier','Region'])
 # Merge associated currency per sale, valid on the sale date
 df_accrual = pd.merge(df_accrual,df_currency,on=['Customer Currency','month,year'])
+
 
 print "Merged"
 
