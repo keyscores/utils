@@ -5,10 +5,10 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/apple.xlsx"
-filename_cable="input/cable.xlsx"
-filename_google="input/google.xlsx"
-filename_lookup="input/lookup.xlsx"
+filename_apple="input/Nossa_Vendas_FORECAST_COMPLETE.xlsx"
+filename_cable="input/Cable-Complete.xlsx"
+filename_google="input/Import_transactional_Google.xlsx"
+filename_lookup="input/DeParaSofaDigital.xlsx"
 filename_balance="output/Balance.xlsx"
 filename_accrual="output/Accrual.xlsx"
 filename_recoupable="output/Recoupable.xlsx"
@@ -79,6 +79,7 @@ checksales = df_sales['Vendor Identifier']
 checklookup = df_tax['Vendor Identifier']
 #produce a list of what titles had transactions but no metadata in lookup
 nometadata = checksales[~checksales.isin(checklookup)]
+#nometadata=nometadata.drop_duplicates(cols=[1])
 nometadata.to_frame(name='column_name').to_excel(filename_nometadata)
 
 
