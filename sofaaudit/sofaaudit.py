@@ -22,11 +22,13 @@ print "...Apple Loaded"
 df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','CUSTOMER PRICE','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 print "...Cable Loaded"
 df_cable.rename(columns={'CUSTOMER PRICE':'Customer Price'}, inplace=True)
-df_tax  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Titles',u'Comissão','Tax Witholding','NOW Tax','Rights Holder']]
+df_titles  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Titles',u'Comissão','Tax Witholding','NOW Tax','Rights Holder','Regime']]
 df_regions = pd.read_excel(filename_lookup,sheetname="Regions")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
 df_recoup  = pd.read_excel("input/DeParaSofaDigital.xlsx",sheetname="Recoupable")[['Date','Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media U$']]
 df_recoup.rename(columns={u'Date':'month,year'}, inplace=True)
+df_tax = pd.read_excel(filename_lookup,sheetname="Regime")
+
 print "...lookup tables loaded"
 #add google
 df_google = pd.read_excel(filename_google)[['Vendor UPC','Resolution','Retail Price (USD)','Purchase Location', 'Transaction Type', 'Transaction Date', 'Country','Final Partner Earnings (USD)']]
@@ -76,10 +78,10 @@ print "Cleaned"
 df_sales.to_excel("Output/AuditSales.xlsx")
 
 checksales = df_sales['Vendor Identifier']
-checklookup = df_tax['Vendor Identifier']
+checklookup = df_titles['Vendor Identifier']
 #produce a list of what titles had transactions but no metadata in lookup
 nometadata = checksales[~checksales.isin(checklookup)]
-#nometadata=nometadata.drop_duplicates(cols=[1])
+#nometadata=nometadata.drop_duplicates
 nometadata.to_frame(name='column_name').to_excel(filename_nometadata)
 
 
@@ -90,7 +92,7 @@ nosales.to_frame(name='column_name').to_excel(filename_nosales)
 print "Audit"
 
 '''Uncomment when date ranges are effective
-### FIND DATE RANGES ####
+### FIND DATE RANGES #### Every film belongs to a rights holder only on between start date and end date
 df_ranges = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Rights Holder','Start Date','End Date']]
 
 #pivot the values into position using melt
@@ -115,16 +117,22 @@ print "Date Range Matched"
 '''
 
 #### MERGE ####
+# From df_sales, create a year column so we can easily Tax regime merge on that.
+df_sales['Year'] = pd.DatetimeIndex(df_sales['month,year']).year
+
+# Merge to get tax rate, per year, per contract (vendor id, righstholder, region) in one table
+df_titles = pd.merge(df_titles,df_tax,on="Regime")
+
 # Merge region from country by merging with regions sheet
 df_sales = pd.merge(df_sales,df_regions,on="Country Code")     
 
-#TODO merge sales with valid time ranges
-
-
 # Merge sales with encoding data, encoding, tax etc per sale
-df_accrual = pd.merge(df_sales,df_tax,on=['Vendor Identifier','Region'])
+df_accrual = pd.merge(df_sales,df_titles,on=['Vendor Identifier','Region', 'Year'])
+
 # Merge associated currency per sale, valid on the sale date
 df_accrual = pd.merge(df_accrual,df_currency,on=['Customer Currency','month,year'])
+
+df_accrual.to_excel("accrual.xlsx")
 
 
 print "Merged"
@@ -132,12 +140,28 @@ print "Merged"
 #### ACCRUAL CALCULATIONS ######
 df_accrual['Customer Gross']=df_accrual['Customer Price']*df_accrual['Units']*df_accrual['Exchange Rate']
 df_accrual['Net revenue']=df_accrual['Royalty Price']*df_accrual['Units']*df_accrual['Exchange Rate']
+
 # TAX The tax has a special rule. Where sales.provider=='Apple' the Value multuplied is 'Tax Witholding', if it is provider == 'Net Now' then it is encoding.Now_Tax
 #should be: "if matches apple or google" <> 'Net Now' is cheating
-apple_provider = df_accrual['Provider'] <> 'NET NOW'
-net_now_provider = df_accrual['Provider'] == 'NET NOW'
-df_accrual['Tax'] = (df_accrual['Net revenue'] * df_accrual['Tax Witholding']).where(apple_provider)
-df_accrual['Tax'] = (df_accrual['Net revenue'] * df_accrual['NOW Tax']).where(net_now_provider, other=df_accrual['Tax'])
+#apple_provider = df_accrual['Provider'] <> 'NET NOW'
+#net_now_provider = df_accrual['Provider'] == 'NET NOW'
+#df_accrual['Tax'] = (df_accrual['Net revenue'] * df_accrual['Tax Witholding']).where(apple_provider)
+#df_accrual['Tax'] = (df_accrual['Net revenue'] * df_accrual['NOW Tax']).where(net_now_provider, other=df_accrual['Tax'])
+
+# Select which rate applies; "offshore" or "brasil" according to the vendors
+brasil_case = df_accrual['Provider'].isin(['NET NOW', 'GVT'])
+offshore_case = df_accrual['Provider'].isin(['APPLE','Google Play', 'YouTube'])
+
+#df_sales['rate'] = df_sales['Brasil'].where(brasil_case)
+# note: other= will fill in nan's with whatever array you place there
+#df_sales['rate'] = df_sales['Offshore'].where(offshore_case, other=df_sales['rate'])
+
+
+df_accrual['Tax'] = (df_accrual['Royalty Price'] * df_accrual['Brasil']).where(brasil_case)
+# note: other= will fill in nan's with whatever array you place there
+df_accrual['Tax'] = (df_accrual['Royalty Price'] * df_accrual['Offshore']).where(offshore_case, other=df_accrual['Tax'])
+
+
 df_accrual['After tax']=df_accrual['Net revenue']-df_accrual['Tax']
 df_accrual['Fee value']=df_accrual['After tax']*df_accrual[u'Comissão']
 df_accrual['Royalty']=df_accrual['After tax']-df_accrual['Fee value']
