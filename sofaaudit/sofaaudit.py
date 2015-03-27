@@ -134,7 +134,7 @@ print "...Vendor ID, Region, Year"
 df_accrual = pd.merge(df_accrual,df_currency,on=['Customer Currency','month,year'])
 print "...Customer Currency"
 
-df_accrual.to_excel("accrual.xlsx")
+#df_accrual.to_excel("testmerge.xlsx")
 
 
 print "Merged"
