@@ -17,19 +17,18 @@ filename_nosales="Output/nosales.xlsx"
 
 print 'Loading files....'
 #### IMPORT ####
-df_sales = pd.read_excel(filename_apple)[['Vendor Identifier','Units','Customer Price','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
-print "...Apple Loaded"
-df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','CUSTOMER PRICE','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
-print "...Cable Loaded"
-df_cable.rename(columns={'CUSTOMER PRICE':'Customer Price'}, inplace=True)
 df_titles  = pd.read_excel(filename_lookup,sheetname="Titles")[['Vendor Identifier','Region','Titles',u'Comissão','Tax Witholding','NOW Tax','Rights Holder','Regime']]
 df_regions = pd.read_excel(filename_lookup,sheetname="Regions")
 df_currency = pd.read_excel(filename_lookup,sheetname="Currency")
 df_recoup  = pd.read_excel("input/DeParaSofaDigital.xlsx",sheetname="Recoupable")[['Date','Vendor Identifier','Titles','Rights Holder','Region','Encoding U$','Media U$']]
 df_recoup.rename(columns={u'Date':'month,year'}, inplace=True)
 df_tax = pd.read_excel(filename_lookup,sheetname="Regime")
-
 print "...lookup tables loaded"
+df_sales = pd.read_excel(filename_apple)[['Vendor Identifier','Units','Customer Price','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+print "...Apple Loaded"
+df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','CUSTOMER PRICE','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+df_cable.rename(columns={'CUSTOMER PRICE':'Customer Price'}, inplace=True)
+print "...Cable Loaded"
 #add google
 df_google = pd.read_excel(filename_google)[['Vendor UPC','Resolution','Retail Price (USD)','Purchase Location', 'Transaction Type', 'Transaction Date', 'Country','Final Partner Earnings (USD)']]
 print "...Google Loaded"
