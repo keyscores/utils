@@ -5,9 +5,9 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Nossa_Vendas_FORECAST_COMPLETE.xlsx"
+filename_apple="input/apple.xlsx"
 filename_cable="input/Cable-Complete.xlsx"
-filename_google="input/Import_transactional_Google.xlsx"
+filename_google="input/google.xlsx"
 filename_lookup="input/DeParaSofaDigital.xlsx"
 filename_balance="output/Balance.xlsx"
 filename_accrual="output/Accrual.xlsx"
@@ -116,20 +116,23 @@ print "Date Range Matched"
 '''
 
 #### MERGE ####
+print "Merging..."
 # From df_sales, create a year column so we can easily Tax regime merge on that.
 df_sales['Year'] = pd.DatetimeIndex(df_sales['month,year']).year
 
 # Merge to get tax rate, per year, per contract (vendor id, righstholder, region) in one table
 df_titles = pd.merge(df_titles,df_tax,on="Regime")
-
+print "...Regime done"
 # Merge region from country by merging with regions sheet
 df_sales = pd.merge(df_sales,df_regions,on="Country Code")     
-
+print "...Country Code done"
 # Merge sales with encoding data, encoding, tax etc per sale
 df_accrual = pd.merge(df_sales,df_titles,on=['Vendor Identifier','Region', 'Year'])
+print "...Vendor ID, Region, Year"
 
 # Merge associated currency per sale, valid on the sale date
 df_accrual = pd.merge(df_accrual,df_currency,on=['Customer Currency','month,year'])
+print "...Customer Currency"
 
 df_accrual.to_excel("accrual.xlsx")
 
@@ -156,9 +159,9 @@ offshore_case = df_accrual['Provider'].isin(['APPLE','Google Play', 'YouTube'])
 #df_sales['rate'] = df_sales['Offshore'].where(offshore_case, other=df_sales['rate'])
 
 
-df_accrual['Tax'] = (df_accrual['Royalty Price'] * df_accrual['Units'] * df_accrual['Brasil']).where(brasil_case)
+df_accrual['Tax'] = (df_accrual['Net revenue'] * df_accrual['Brasil']).where(brasil_case)
 # note: other= will fill in nan's with whatever array you place there
-df_accrual['Tax'] = (df_accrual['Royalty Price'] * df_accrual['Units'] * df_accrual['Offshore']).where(offshore_case, other=df_accrual['Tax'])
+df_accrual['Tax'] = (df_accrual['Net revenue'] * df_accrual['Offshore']).where(offshore_case, other=df_accrual['Tax'])
 
 
 df_accrual['After tax']=df_accrual['Net revenue']-df_accrual['Tax']
