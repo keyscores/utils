@@ -157,9 +157,9 @@ offshore_case = df_accrual['Provider'].isin(['APPLE','Google Play', 'YouTube'])
 #df_sales['rate'] = df_sales['Offshore'].where(offshore_case, other=df_sales['rate'])
 
 
-df_accrual['Tax'] = (df_accrual['Royalty Price'] * df_accrual['Brasil']).where(brasil_case)
+df_accrual['Tax'] = (df_accrual['Royalty Price'] * df_accrual['Units'] * df_accrual['Brasil']).where(brasil_case)
 # note: other= will fill in nan's with whatever array you place there
-df_accrual['Tax'] = (df_accrual['Royalty Price'] * df_accrual['Offshore']).where(offshore_case, other=df_accrual['Tax'])
+df_accrual['Tax'] = (df_accrual['Royalty Price'] * df_accrual['Units'] * df_accrual['Offshore']).where(offshore_case, other=df_accrual['Tax'])
 
 
 df_accrual['After tax']=df_accrual['Net revenue']-df_accrual['Tax']
@@ -194,7 +194,7 @@ print "Balance Calculated"
 
 #### EXPORTING ACCRUAL REPORT ####
 accrual_groupby = ['month,year','Provider','Country Code', 'Titles','Region','Rights Holder','Product Type Identifier','Asset/Content Flavor']
-df_accrual.drop(['Download Date (PST)', 'Royalty Price','Tax Witholding','Customer Currency','Customer Price', u'Comissão', 'NOW Tax', 'Exchange Rate', 'Month','Vendor Identifier'],inplace=True,axis=1)
+df_accrual.drop(['Download Date (PST)', 'Royalty Price','Tax Witholding','Customer Currency','Customer Price', u'Comissão', 'NOW Tax', 'Exchange Rate', 'Month','Vendor Identifier','Brasil', 'Offshore', 'Year'],inplace=True,axis=1)
 df_accrual = df_accrual.groupby(accrual_groupby).sum()
 #df_accrual = df_accrual.set_index(accrual_groupby)
 df_accrual.to_excel(filename_accrual, encoding='utf-8',merge_cells=False)
