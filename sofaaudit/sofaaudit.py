@@ -175,7 +175,9 @@ df_recoup['Recoupable'] = df_recoup['Encoding U$'] + df_recoup['Media U$']
 
 balance_groupby = ['month,year','Titles','Rights Holder']
 # creating a new dataframe from the series. This could be simpler. Some cargo cult happening here.
-s_accrual_royalty2 = df_accrual.groupby(balance_groupby)['Royalty'].sum()
+# Groupby with Sum of the dimensions we want to preserve from ACCRUAL
+s_accrual_royalty2 = df_accrual.groupby(balance_groupby)['Royalty', 'Units','Net revenue'].sum()
+# ...same for recopable
 s_recoupable = df_recoup.groupby(balance_groupby)['Recoupable'].sum()
 df_recoupable= pd.concat([s_recoupable],axis=1)
 df_balance = pd.concat([s_accrual_royalty2],axis=1).reset_index()
@@ -187,8 +189,13 @@ df_balance = df_balance.merge(df_recoupable, on = [u'Titles', u'Rights Holder'])
 # do the calcs
 # it needs to be multiindex so that cumsum works properly
 df_balance = df_balance.set_index(['month,year','Titles','Rights Holder'])
-df_balance['Cumu'] = df_balance['Royalty'].groupby(level=[1,2]).cumsum()
-df_balance['Balance'] = df_balance['Recoupable'] + df_balance['Cumu']
+# Get the actual columns we want for balance.
+df_balance['Cumu Royalty'] = df_balance['Royalty'].groupby(level=[1,2]).cumsum()
+# these columns are not used in subsequent calculations, just nice-to-have
+df_balance['Cumu Units'] = df_balance['Units'].groupby(level=[1,2]).cumsum()
+df_balance['Cumu Net revenue'] = df_balance['Net revenue'].groupby(level=[1,2]).cumsum()
+
+df_balance['Balance'] = df_balance['Recoupable'] + df_balance['Cumu Royalty']
 df_balance['Positive'] = df_balance['Balance'].mask(df_balance['Balance']<0).fillna(0)
 x = df_balance['Positive'].groupby(level=[1,2]).diff()
 df_balance['Payment Owed'] = x.fillna(df_balance['Positive'])
