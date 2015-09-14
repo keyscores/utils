@@ -5,9 +5,9 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Nossa_Vendas_FORECAST_COMPLETE.xlsx"
-filename_cable="input/Cable-Complete.xlsx"
-filename_google="input/Import_transactional_Google.xlsx"
+filename_apple="input/apple.xlsx"
+filename_cable="input/cable.xlsx"
+filename_google="input/google.xlsx"
 filename_lookup="input/DeParaSofaDigital.xlsx"
 filename_balance="output/Balance.xlsx"
 filename_accrual="output/Accrual.xlsx"
@@ -177,14 +177,28 @@ balance_groupby = ['month,year','Titles','Rights Holder']
 # creating a new dataframe from the series. This could be simpler. Some cargo cult happening here.
 # Groupby with Sum of the dimensions we want to preserve from ACCRUAL
 s_accrual_royalty2 = df_accrual.groupby(balance_groupby)['Royalty', 'Units','Net revenue'].sum()
-# ...same for recopable
+# ...same for recoupable
 s_recoupable = df_recoup.groupby(balance_groupby)['Recoupable'].sum()
+#get a series into dataframe format to later be able to merge
 df_recoupable= pd.concat([s_recoupable],axis=1)
 df_balance = pd.concat([s_accrual_royalty2],axis=1).reset_index()
 df_recoupable = df_recoupable.groupby(level=[1,2]).sum().reset_index()
 
 #merging the tables along the columns that interest us. not sure why it needs unicode handling.
 df_balance = df_balance.merge(df_recoupable, on = [u'Titles', u'Rights Holder'])
+
+#Merging currency info for BRL and MXN
+df_brl = df_currency[df_currency['Customer Currency'].isin(['BRL'])]
+df_brl = df_brl[[ 'month,year', 'Exchange Rate']]
+df_balance = df_balance.merge(df_brl, on = ['month,year'])
+df_balance = df_balance.rename(columns = {'Exchange Rate':'BRL'})
+
+df_mxn = df_currency[df_currency['Customer Currency'].isin(['MXN'])]
+df_mxn = df_mxn[[ 'month,year', 'Exchange Rate']]
+df_balance = df_balance.merge(df_mxn, on = ['month,year'])
+df_balance = df_balance.rename(columns = {'Exchange Rate':'MXN'})
+
+print df_balance
 
 # do the calcs
 # it needs to be multiindex so that cumsum works properly
@@ -199,6 +213,19 @@ df_balance['Balance'] = df_balance['Recoupable'] + df_balance['Cumu Royalty']
 df_balance['Positive'] = df_balance['Balance'].mask(df_balance['Balance']<0).fillna(0)
 x = df_balance['Positive'].groupby(level=[1,2]).diff()
 df_balance['Payment Owed'] = x.fillna(df_balance['Positive'])
+
+df_balance['Payment Owed BRL'] = df_balance['Payment Owed'] / df_balance['BRL']
+df_balance['Payment Owed MXN'] = df_balance['Payment Owed'] / df_balance['MXN'] 
+
+#print df_brl
+#df_balance.reset_index()
+#df_test = df_balance.merge(df_brl, on = ['month,year'])
+
+#df_balance=df_balance.rename(columns = {'Payment Owed BRL':'TEST RENAME BRL'})
+
+print df_balance
+
+
 print "Balance Calculated"
 
 #### EXPORTING ACCRUAL REPORT ####
