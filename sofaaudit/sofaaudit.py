@@ -5,22 +5,26 @@ import datetime
 import pandas as pd
 import numpy as np
 
-filename_apple="input/Nossa_Vendas_FORECAST_COMPLETE.xlsx"
-filename_apple2="input/Import iTunes II.xlsx"
-filename_cable="input/Cable-Complete.xlsx"
-filename_google="input/Import_transactional_Google.xlsx"
+usePickle = False
+# filename_apple="input/historic_report_itunes.xlsx"
+# filename_apple2="input/Report_Itunes_2016.xlsx"
+# filename_cable="input/Cable-Complete.xlsx"
+# filename_google="input/Import_transactional_Google.xlsx"
 
 #test data
-# filename_apple="input/apple.xlsx"
-# filename_cable="input/cable.xlsx"
-# filename_google="input/google.xlsx"
+filename_apple="input/apple.xlsx"
+filename_apple2="input/apple.xlsx"
+filename_cable="input/cable.xlsx"
+filename_google="input/google.xlsx"
 
 filename_lookup="input/DeParaSofaDigital.xlsx"
+
 filename_balance="output/Balance.xlsx"
 filename_accrual="output/Accrual.xlsx"
 filename_recoupable="output/Recoupable.xlsx"
 filename_nometadata="output/nometadata.xlsx"
 filename_nosales="output/nosales.xlsx"
+
 
 print 'Loading files....'
 #### IMPORT ####
@@ -31,18 +35,40 @@ df_recoup  = pd.read_excel("input/DeParaSofaDigital.xlsx",sheetname="Recoupable"
 df_recoup.rename(columns={u'Date':'month,year'}, inplace=True)
 df_tax = pd.read_excel(filename_lookup,sheetname="Regime")
 print "...lookup tables loaded"
-df_sales = pd.read_excel(filename_apple)[['Vendor Identifier','Units','Customer Price','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
-df_apple2 = pd.read_excel(filename_apple2)[['Vendor Identifier','Units','Customer Price','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
 
-df_sales = pd.concat([df_sales,df_apple2])
+if usePickle:
+	df_cable = pd.read_pickle("cable.pkl")
+
+else:
+	df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','CUSTOMER PRICE','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+	df_cable.rename(columns={'CUSTOMER PRICE':'Customer Price'}, inplace=True)
+	df_cable.to_pickle("cable.pkl")
+
+print "...Cable Loaded"
+
+#add google
+if usePickle:
+	df_google = pd.read_pickle("google.pkl")
+else:
+	df_google = pd.read_excel(filename_google)[['Vendor UPC','Resolution','Retail Price (USD)','Purchase Location', 'Transaction Type', 'Transaction Date', 'Country','Final Partner Earnings (USD)']]
+	df_google.to_pickle("google.pkl")
+
+print "...Google Loaded"
+
+if usePickle:
+	df_sales= pd.read_pickle("sales.pkl")
+	df_apple2=pd.read_pickle("apple2.pkl")
+else:
+	df_sales = pd.read_excel(filename_apple)[['Vendor Identifier','Units','Customer Price','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+	df_apple2 = pd.read_excel(filename_apple2)[['Vendor Identifier','Units','Customer Price','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
+	df_sales.to_pickle("sales.pkl")
+	df_apple2.to_pickle("apple2.pkl")
+
+
+# df_sales = pd.concat([df_sales,df_apple2])
 
 print "...Apple Loaded"
-df_cable = pd.read_excel(filename_cable)[['Vendor Identifier','Units','CUSTOMER PRICE','Royalty Price','Download Date (PST)','Customer Currency','Country Code','Product Type Identifier', 'Asset/Content Flavor', 'Provider']]
-df_cable.rename(columns={'CUSTOMER PRICE':'Customer Price'}, inplace=True)
-print "...Cable Loaded"
-#add google
-df_google = pd.read_excel(filename_google)[['Vendor UPC','Resolution','Retail Price (USD)','Purchase Location', 'Transaction Type', 'Transaction Date', 'Country','Final Partner Earnings (USD)']]
-print "...Google Loaded"
+
 df_google = df_google.rename(columns={'Vendor UPC': 'Vendor Identifier','Retail Price (USD)':'Customer Price','Resolution': 'Asset/Content Flavor','Transaction Type': 'Product Type Identifier','Country': 'Country Code','Purchase Location':'Provider','Final Partner Earnings (USD)':'Royalty Price','Transaction Date':'Download Date (PST)'})
 # google has no column units, must assume each row equals 1
 df_google['Units']="1"
@@ -53,8 +79,11 @@ df_google['Product Type Identifier']=df_google['Product Type Identifier'].map({'
 print 'Loaded'
 
 #add cable and google to the sales dataframe
-df_sales = df_sales.append(df_cable)
-df_sales = df_sales.append(df_google)
+df_sales = df_sales.append([df_google,df_cable,df_apple2], ignore_index=True)
+# df_sales = df_sales.append(df_cable, ignore_index=True)
+
+# df_sales.to_excel("Output/AuditSales.xlsx")
+print df_sales['Provider'].unique()
 
 print 'Appended'
 
@@ -85,7 +114,10 @@ print "Cleaned"
 #
 # ### AUDIT ###
 # #THAT ALL THE VENDOR IDs in sales are in the DePara File
-df_sales.to_excel("Output/AuditSales.xlsx")
+# df_sales.to_excel("Output/AuditSales.xlsx")
+
+print "AuditSales to excel"
+
 
 checksales = df_sales['Vendor Identifier']
 checklookup = df_titles['Vendor Identifier']
@@ -116,7 +148,7 @@ f = lambda df_ranges: df_ranges.resample(rule='MS', how='first')
 # apply the resample rule to each groupby level
 df_ranges = df_ranges.groupby(['Vendor Identifier','Region','Rights Holder', 'Titles', 'Regime', u'Comissão']).apply(f)
 
-print(df_ranges) 
+# print(df_ranges) 
 
 # format the output, and drop unnecessary columns
 df_ranges = df_ranges.drop(['Vendor Identifier','Region','Rights Holder','Titles',  'Regime',u'Comissão', 'variable'], axis=1)
@@ -202,6 +234,8 @@ groupbyList = ['Region', 'Rights Holder','Titles','monthyear']
 
 # df_recoup.reset_index(inplace = True)
 
+df_accrual.to_excel(filename_accrual, encoding='utf-8',merge_cells=False)
+
 
 print "!!!!!!!ROYALTY!!!!!!!!!!"
 # df_accrual.reset_index(inplace = True)
@@ -217,6 +251,9 @@ df_accrual.set_index(['monthyear'], inplace = True)
 df_recoup.set_index(['monthyear'], inplace = True)
 
 df_balance = pd.concat([df_accrual,df_recoup ])
+df_balance.to_excel('testbalance.xlsx', encoding='utf-8',merge_cells=False)
+
+
 df_balance.drop(['month,year'],inplace=True,axis=1)
 
 df_balance.reset_index(inplace = True)
@@ -257,7 +294,7 @@ df_mxn = df_mxn[['monthyear', 'Exchange Rate']]
 df_mxn = df_mxn.rename(columns = {'Exchange Rate':'MXN'})
 df_balance = df_balance.merge(df_mxn, on = ['monthyear'])
 
-print df_balance[: 3]
+# print df_balance[: 3]
 
 df_balance['Payment Owed BRL'] = df_balance['Payment Owed'] / df_balance['BRL']
 df_balance['Payment Owed MXN'] = df_balance['Payment Owed'] / df_balance['MXN']
